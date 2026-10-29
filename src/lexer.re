@@ -46,7 +46,7 @@ Token NextToken(const char*& YYCURSOR) {
         "<"  { return {EToken_L_ANGLE, {start, 1}}; }
         ">"  { return {EToken_R_ANGLE, {start, 1}}; }
 
-        "abstract" { return {EToken_ABSTRACT, {start, 1}}; }
+        "abstract" { return {EToken_ABSTRACT, {start, YYCURSOR - start}}; }
         // A label is an identifier immediately followed by a colon (e.g. "Label:")
         [a-zA-Z_][a-zA-Z0-9_]* ":" {
             YYCURSOR--;

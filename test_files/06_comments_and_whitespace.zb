@@ -1,0 +1,11 @@
+// Leading comment
+/*
+  Multi-line comment block
+  with special chars: * / ** :;
+*/
+
+abstract   Stmt  ;   // trailing line comment
+
+/* Block comment inline */ Rule1 ::= <ID>;
+
+// Trailing comment without final newline

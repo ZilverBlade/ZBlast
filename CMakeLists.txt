@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.27)
 project(ZBlast)
 
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_program(RE2C_EXECUTABLE re2c REQUIRED)
 
@@ -16,9 +17,28 @@ add_custom_command(
     VERBATIM
 )
 
-add_executable(ZBlast
-    src/main.cpp
+add_library(zblast_core STATIC
     ${LEXER_OUTPUT}
 )
+target_include_directories(zblast_core PUBLIC
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+    "${CMAKE_CURRENT_BINARY_DIR}"
+)
 
-target_include_directories(ZBlast PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
+add_executable(ZBlast
+    src/main.cpp
+)
+target_link_libraries(ZBlast PRIVATE zblast_core)
+
+enable_testing()
+
+include(FetchContent)
+FetchContent_Declare(
+    googletest
+    URL https://github.com/google/googletest/archive/refs/tags/v1.15.2.tar.gz
+)
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(googletest)
+
+add_subdirectory(test)
+

@@ -1,0 +1,2 @@
+// Contains illegal lexical characters for lexer testing
+Rule ::= @illegal $character ?;
