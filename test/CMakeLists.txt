@@ -1,6 +1,7 @@
 add_executable(zblast_tests
     lexer_test.cpp
     parser_test.cpp
+    ast_test.cpp
 )
 
 target_compile_definitions(zblast_tests PRIVATE

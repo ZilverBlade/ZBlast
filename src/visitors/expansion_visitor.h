@@ -30,7 +30,7 @@ namespace zblast {
             parsetree::Node* declaration;         // Node that declares it
             std::vector<ExpansionMember> members; // Right hand side of the rule
         };
-        class ExpansionVisitor : Visitor {
+        class ExpansionVisitor : public Visitor {
         public:
             void* Visit(parsetree::Rule* node, void* data);
             void* Visit(parsetree::OptExpansion* node, void* data);

@@ -1,5 +1,7 @@
 #pragma once
 #include "visitor.h"
+#include "visitors/declaration_visitor.h"
+#include "visitors/expansion_visitor.h"
 #include <string>
 #include <vector>
 
@@ -57,7 +59,7 @@ namespace zblast {
             std::string PrettyPrint() const;
         };
 
-        class ErrorVisitor : Visitor {
+        class ErrorVisitor : public Visitor {
         public:
             void* Visit(parsetree::Start* node, void* data);
 
@@ -65,6 +67,9 @@ namespace zblast {
                 return m_Errors;
             }
         private:
+            DeclarationVisitor m_DeclVisitor;
+            ExpansionVisitor m_ExpVisitor;
+
             std::vector<Error> m_Errors;
         };
     } // namespace visitors

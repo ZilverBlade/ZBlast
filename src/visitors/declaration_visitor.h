@@ -12,7 +12,7 @@ namespace zblast {
             parsetree::Node* declaration;
             std::optional<std::string> classInherit;
         };
-        class DeclarationVisitor : Visitor {
+        class DeclarationVisitor : public Visitor {
         public:
             void* Visit(parsetree::Rule* node, void* data);
 

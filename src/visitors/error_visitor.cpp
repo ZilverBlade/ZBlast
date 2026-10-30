@@ -24,14 +24,17 @@ namespace zblast {
         }
 
         void* ErrorVisitor::Visit(parsetree::Start* node, void* data) {
-            DeclarationVisitor declVisitor;
+            node->Accept(&m_DeclVisitor, nullptr);
+            node->Accept(&m_ExpVisitor, nullptr);
+
             std::unordered_map<std::string, const Declaration*> foundDeclarations;
-            for (auto& decl : declVisitor.GetDeclarations()) {
+            for (auto& decl : m_DeclVisitor.GetDeclarations()) {
                 if (auto it = foundDeclarations.find(decl.className); it == foundDeclarations.end()) {
                     foundDeclarations[decl.className] = &decl;
                 }
                 else {
                     PROVIDE_ERROR(Z001, decl.declaration->LineStart, decl.declaration->ColumnStart,
+                        decl.className.c_str(),
                         it->second->declaration->LineStart, it->second->declaration->ColumnStart
                     );
                 }

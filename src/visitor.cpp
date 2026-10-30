@@ -16,7 +16,9 @@ namespace zblast {
     void* Visitor::Visit(parsetree::Start* node, void* data) { return VisitChildren(node, data); }
     void* Visitor::VisitChildren(parsetree::ParseNode* node, void* data) {
         for (parsetree::ParseNode* child : node->Children()) {
-            child->Accept(this, data);
+            if (child) {
+                child->Accept(this, data);
+            }
         }
         return data;
     }

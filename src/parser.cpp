@@ -154,11 +154,12 @@ namespace zblast {
         }
 
         // FOLLOW
-        if (token == EToken_DOUBLE_COLON_EQ) {
+        if (token == EToken_DOUBLE_COLON_EQ || token == EToken_SEMICOLON) {
             node->IsEpsilon = true;
             return node;
         }
-        return node;
+
+        PARSER_PANIC();
     }
 
     static Ptr<parsetree::Node> Parse_Node(Parser &parser) {

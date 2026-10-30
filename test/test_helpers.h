@@ -82,18 +82,24 @@ namespace zblast::test {
         if (std::filesystem::exists(base / "parser" / filename)) {
             return base / "parser" / filename;
         }
+        if (std::filesystem::exists(base / "ast" / filename)) {
+            return base / "ast" / filename;
+        }
 
         // Fallbacks if relative path differs
         std::vector<std::filesystem::path> candidates = {
             std::filesystem::path("test_files") / filename,
             std::filesystem::path("test_files/lexer") / filename,
             std::filesystem::path("test_files/parser") / filename,
+            std::filesystem::path("test_files/ast") / filename,
             std::filesystem::path("../test_files") / filename,
             std::filesystem::path("../test_files/lexer") / filename,
             std::filesystem::path("../test_files/parser") / filename,
+            std::filesystem::path("../test_files/ast") / filename,
             std::filesystem::path("../../test_files") / filename,
             std::filesystem::path("../../test_files/lexer") / filename,
-            std::filesystem::path("../../test_files/parser") / filename
+            std::filesystem::path("../../test_files/parser") / filename,
+            std::filesystem::path("../../test_files/ast") / filename
         };
 
         for (const auto &p: candidates) {

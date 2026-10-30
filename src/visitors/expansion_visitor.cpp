@@ -1,4 +1,3 @@
-#pragma once
 #include "expansion_visitor.h"
 #include "parsetree.h"
 
