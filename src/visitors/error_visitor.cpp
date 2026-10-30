@@ -75,18 +75,18 @@ namespace zblast {
                                 Z002, memDecl[i]->LineStart, memDecl[i]->ColumnStart,
                                 label.c_str(),
                                 memDecl[0]->LineStart, memDecl[0]->ColumnStart
-                            );    
+                            );
                         }
                     }
                 }
             }
 
             // Check if inherited classes exist
-            for (auto & [declName, refs]: referencedIdentifiers) {
+            for (auto& [declName, refs]: referencedIdentifiers) {
                 if (!foundDeclarations.contains(declName)) {
                     for (auto& ref : refs) {
                         PROVIDE_ERROR(
-                            Z003, ref->LineStart, ref->ColumnStart, 
+                            Z003, ref->LineStart, ref->ColumnStart,
                             declName.c_str()
                         );
                     }
@@ -94,10 +94,21 @@ namespace zblast {
             }
 
             // Check unused classes, that are abstract
-            for (auto & [declName, decl]: foundDeclarations) {
+            for (auto& [declName, decl]: foundDeclarations) {
                 if (decl->isAbstract && referencedIdentifiers[declName].empty()) {
                     PROVIDE_ERROR(
-                        Z004, decl->rule->LineStart, decl->rule->ColumnStart, 
+                        Z004, decl->rule->LineStart, decl->rule->ColumnStart,
+                        declName.c_str()
+                    );
+                }
+            }
+
+            // Check if children were found in the opt_expansion
+            for (auto& [declName, decl]: foundDeclarations) {
+                if (!decl->isAbstract && !decl->rule->opt_expansion->IsEpsilon
+                    && decl->rule->opt_expansion->child_list->IsEpsilon) {
+                    PROVIDE_ERROR(
+                        Z005, decl->rule->LineStart, decl->rule->ColumnStart,
                         declName.c_str()
                     );
                 }

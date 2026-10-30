@@ -23,9 +23,10 @@ namespace zblast {
         X(Z001, Error,   "Redefinition of class \"%s\", already defined at %d:%d")   \
         X(Z002, Error,   "Conflicting member name \"%s\", already defined at %d:%d") \
         X(Z003, Error,   "Undefined class \"%s\" referenced")                        \
-        X(Z004, Warning, "Unused abstract class \"%s\"")
-
-#define EXPAND(Code, ...) EError_##Code, 
+        X(Z004, Warning, "Unused abstract class \"%s\"")                             \
+        X(Z005, Warning, "Class \"%s\" has no children, but \"::=\" was present")
+        
+#define EXPAND(Code, ...) EError_##Code,
 
         enum EErrorCode {
             ERROR_CODES(EXPAND)
