@@ -25,7 +25,7 @@ namespace zblast {
 } while (false)
 
     static Ptr<parsetree::Iden> Parse_Iden(Parser &parser) {
-        Ptr node = make_unique<parsetree::Iden>();
+        auto node = make_unique<parsetree::Iden>();
         parser.FillAstData(*node);
         ETokenType token = parser.Peek();
         // FIRST
@@ -46,7 +46,7 @@ namespace zblast {
     }
 
     static Ptr<parsetree::LabeledIden> Parse_LabeledIden(Parser &parser) {
-        Ptr node = make_unique<parsetree::LabeledIden>();
+        auto node = make_unique<parsetree::LabeledIden>();
         parser.FillAstData(*node);
         ETokenType token = parser.Peek();
         // FIRST
@@ -64,7 +64,7 @@ namespace zblast {
     }
 
     static Ptr<parsetree::VariantQual> Parse_VariantQual(Parser &parser) {
-        Ptr node = make_unique<parsetree::VariantQual>();
+        auto node = make_unique<parsetree::VariantQual>();
         parser.FillAstData(*node);
         ETokenType token = parser.Peek();
         // FIRST
@@ -81,7 +81,7 @@ namespace zblast {
     }
 
     static Ptr<parsetree::ChildQual> Parse_ChildQual(Parser &parser) {
-        Ptr node = make_unique<parsetree::ChildQual>();
+        auto node = make_unique<parsetree::ChildQual>();
         parser.FillAstData(*node);
         ETokenType token = parser.Peek();
         // FIRST
@@ -106,7 +106,7 @@ namespace zblast {
     }
 
     static Ptr<parsetree::Child> Parse_Child(Parser &parser) {
-        Ptr node = make_unique<parsetree::Child>();
+        auto node = make_unique<parsetree::Child>();
         parser.FillAstData(*node);
         ETokenType token = parser.Peek();
         // FIRST
@@ -128,7 +128,7 @@ namespace zblast {
     }
 
     static Ptr<parsetree::ChildList> Parse_ChildList(Parser &parser) {
-        Ptr node = make_unique<parsetree::ChildList>();
+        auto node = make_unique<parsetree::ChildList>();
         parser.FillAstData(*node);
         ETokenType token = parser.Peek();
         // FIRST
@@ -149,14 +149,14 @@ namespace zblast {
     }
 
     static Ptr<parsetree::NodeRef> Parse_NodeRef(Parser &parser) {
-        Ptr node = make_unique<parsetree::NodeRef>();
+        auto node = make_unique<parsetree::NodeRef>();
         parser.FillAstData(*node);
         node->ID = parser.Accept(EToken_ID).text;
         return node;
     }
 
     static Ptr<parsetree::OptInherit> Parse_OptInherit(Parser &parser) {
-        Ptr node = make_unique<parsetree::OptInherit>();
+        auto node = make_unique<parsetree::OptInherit>();
         parser.FillAstData(*node);
         ETokenType token = parser.Peek();
         // FIRST
@@ -177,7 +177,7 @@ namespace zblast {
     }
 
     static Ptr<parsetree::Node> Parse_Node(Parser &parser) {
-        Ptr node = make_unique<parsetree::Node>();
+        auto node = make_unique<parsetree::Node>();
         parser.FillAstData(*node);
         node->node_ref = Parse_NodeRef(parser);
         node->opt_inherit = Parse_OptInherit(parser);
@@ -185,7 +185,7 @@ namespace zblast {
     }
 
     static Ptr<parsetree::OptExpansion> Parse_OptExpansion(Parser &parser) {
-        Ptr node = make_unique<parsetree::OptExpansion>();
+        auto node = make_unique<parsetree::OptExpansion>();
         parser.FillAstData(*node);
         ETokenType token = parser.Peek();
 
@@ -206,7 +206,7 @@ namespace zblast {
     }
 
     static Ptr<parsetree::Rule> Parse_Rule(Parser &parser) {
-        Ptr node = make_unique<parsetree::Rule>();
+        auto node = make_unique<parsetree::Rule>();
         parser.FillAstData(*node);
         ETokenType token = parser.Peek();
         // FIRST
@@ -226,7 +226,7 @@ namespace zblast {
     }
 
     static Ptr<parsetree::RuleList> Parse_RuleList(Parser &parser) {
-        Ptr node = make_unique<parsetree::RuleList>();
+        auto node = make_unique<parsetree::RuleList>();
         parser.FillAstData(*node);
         ETokenType token = parser.Peek();
         // FIRST
@@ -246,7 +246,7 @@ namespace zblast {
     }
 
     static Ptr<parsetree::Start> Parse_Start(Parser &parser) {
-        Ptr node = make_unique<parsetree::Start>();
+        auto node = make_unique<parsetree::Start>();
         parser.FillAstData(*node);
         node->rule_list = Parse_RuleList(parser);
         parser.Accept(EToken_EOF);
