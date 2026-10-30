@@ -18,8 +18,6 @@ using List = std::vector<T>;
 using std::make_unique;
 
 namespace zblast {
-
-
 #define PARSER_PANIC() do {\
     char errBuf[128];\
     snprintf(errBuf, sizeof(errBuf), "Failed to match parse token %s in rule %s! @ %d:%d", ETokenType_ToString(parser.Peek()), __func__, parser.CurrLine(), parser.CurrCol());\
@@ -162,9 +160,30 @@ namespace zblast {
         return node;
     }
 
+    static Ptr<parsetree::OptExpansion> Parse_OptExpansion(Parser &parser) {
+        Ptr node = make_unique<parsetree::OptExpansion>();
+        ETokenType token = parser.Peek();
+
+        // FIRST
+        if (token == EToken_DOUBLE_COLON_EQ) {
+            node->isEpsilon = false;
+            parser.Accept(EToken_DOUBLE_COLON_EQ);
+            node->child_list = Parse_ChildList(parser);
+            return node;
+        }
+        // FOLLOW
+        if (token == EToken_SEMICOLON) {
+            // Other case is node
+            node->isEpsilon = true;
+            return node;
+        }
+        PARSER_PANIC();
+    }
+
     static Ptr<parsetree::Rule> Parse_Rule(Parser &parser) {
         Ptr node = make_unique<parsetree::Rule>();
         ETokenType token = parser.Peek();
+        // FIRST
         if (token == EToken_ABSTRACT) {
             node->isAbstract = true;
             parser.Accept(EToken_ABSTRACT);
@@ -174,8 +193,7 @@ namespace zblast {
             // Other case is node
             node->isAbstract = false;
             node->node = Parse_Node(parser);
-            parser.Accept(EToken_DOUBLE_COLON_EQ);
-            node->child_list = Parse_ChildList(parser);
+            node->opt_expansion = Parse_OptExpansion(parser);
             parser.Accept(EToken_SEMICOLON);
         }
         return node;

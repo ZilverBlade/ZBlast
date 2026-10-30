@@ -12,8 +12,10 @@
  rule_list -> rule rule_list
  rule_list -> \epsilon
 
- rule -> node "::=" child_list ";"
+ rule -> node opt_expansion ";"
  rule -> "abstract" node ";"
+ opt_expansion -> "::=" child_list
+ opt_expansion -> \epsilon
  node -> node_ref opt_inherit
 
  node_ref -> ID

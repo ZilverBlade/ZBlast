@@ -1,0 +1,3 @@
+abstract Type;
+UnknownType : Type; // SHOULD be valid!!
+IntType : Type;     // SHOULD be valid!!

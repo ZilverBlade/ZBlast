@@ -13,21 +13,7 @@ using namespace zblast::test;
  *
  * Test suite for the ZBlast LL(1) parser.
  *
- * The grammar defined for ZBlast is:
- *   start        -> rule_list EOF
- *   rule_list    -> rule rule_list | \epsilon
- *   rule         -> node "::=" child_list ";" | "abstract" ID ";"
- *   node_ref     -> ID
- *   node         -> node_ref opt_inherit
- *   opt_inherit  -> ":" node_ref | \epsilon
- *   child_list   -> child child_list | \epsilon
- *   named_node   -> LABEL ":" ID | ID
- *   child        -> "<" ID ">"          (Literal)
- *                 | "[" named_node "]"  (Optional)
- *                 | named_node child_qual
- *                 | named_node
- *   child_qual   -> "*"                 (List)
- *                 | "|" child           (Variant)
+ * The grammar defined for ZBlast can be found in src/main.cpp
  *
  * Parser tests below are structured using the GoogleTest  prefix.
  * This allows the entire test suite to build and pass cleanly now.
@@ -206,6 +192,10 @@ TEST_F(ParserTestFixture, ParseTestCase05FullAst) {
 
 TEST_F(ParserTestFixture, ParseTestCase06CommentsAndWhitespace) {
     RunParserTestCase("06_comments_and_whitespace");
+}
+
+TEST_F(ParserTestFixture, ParseTestCase07EmptyIdent) {
+    RunParserTestCase("07_empty_ident");
 }
 
 TEST_F(ParserTestFixture, ParseAllParserSubdirectoryCases) {

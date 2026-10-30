@@ -10,54 +10,58 @@ Start
           NodeRef: LetDecl
           OptInherit
             NodeRef: Stmt
-        ChildList
-          Child
-            LabeledIden
-              Iden: ID
-            ChildQual
-          ChildList
-      RuleList
-        Rule
-          Node
-            NodeRef: ConstDecl
-            OptInherit
-              NodeRef: Stmt
+        OptExpansion
           ChildList
             Child
               LabeledIden
                 Iden: ID
               ChildQual
             ChildList
+      RuleList
+        Rule
+          Node
+            NodeRef: ConstDecl
+            OptInherit
+              NodeRef: Stmt
+          OptExpansion
+            ChildList
               Child
-                LabeledIden: Value
-                  Iden: INT_LITERAL
+                LabeledIden
+                  Iden: ID
+                ChildQual
               ChildList
+                Child
+                  LabeledIden: Value
+                    Iden: INT_LITERAL
+                ChildList
         RuleList
           Rule
             Node
               NodeRef: VarDeclStmt
               OptInherit
                 NodeRef: Stmt
-            ChildList
-              Child
-                LabeledIden
-                  Iden: LetDecl
-                ChildQual
-                  Child
-                    LabeledIden
-                      Iden: ConstDecl
-                    ChildQual
+            OptExpansion
               ChildList
+                Child
+                  LabeledIden
+                    Iden: LetDecl
+                  ChildQual
+                    Child
+                      LabeledIden
+                        Iden: ConstDecl
+                      ChildQual
+                ChildList
           RuleList
             Rule
               Node
                 NodeRef: BlockStmt
                 OptInherit
                   NodeRef: Stmt
-              ChildList
-                Child
-                  LabeledIden
-                    Iden: Stmt
-                  ChildQual
+              OptExpansion
                 ChildList
+                  Child
+                    LabeledIden
+                      Iden: Stmt
+                    ChildQual
+                  ChildList
             RuleList

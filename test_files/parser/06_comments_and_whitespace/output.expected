@@ -9,10 +9,11 @@ Start
         Node
           NodeRef: Rule1
           OptInherit
-        ChildList
-          Child
-            LabeledIden
-              Iden: ID
-            ChildQual
+        OptExpansion
           ChildList
+            Child
+              LabeledIden
+                Iden: ID
+              ChildQual
+            ChildList
       RuleList

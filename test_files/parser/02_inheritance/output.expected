@@ -5,32 +5,34 @@ Start
         NodeRef: LetDecl
         OptInherit
           NodeRef: Stmt
-      ChildList
-        Child
-          LabeledIden
-            Iden: ID
-          ChildQual
+      OptExpansion
         ChildList
+          Child
+            LabeledIden
+              Iden: ID
+            ChildQual
+          ChildList
     RuleList
       Rule
         Node
           NodeRef: BinaryExpr
           OptInherit
             NodeRef: Expr
-        ChildList
-          Child
-            LabeledIden: Left
-              Iden: Expr
-            ChildQual
+        OptExpansion
           ChildList
             Child
-              LabeledIden
-                Iden: OP
+              LabeledIden: Left
+                Iden: Expr
               ChildQual
             ChildList
               Child
-                LabeledIden: Right
-                  Iden: Expr
+                LabeledIden
+                  Iden: OP
                 ChildQual
               ChildList
+                Child
+                  LabeledIden: Right
+                    Iden: Expr
+                  ChildQual
+                ChildList
       RuleList

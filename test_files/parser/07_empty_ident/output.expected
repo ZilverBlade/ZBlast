@@ -1,0 +1,21 @@
+Start
+  RuleList
+    Rule
+      Node
+        NodeRef: Type
+        OptInherit
+    RuleList
+      Rule
+        Node
+          NodeRef: UnknownType
+          OptInherit
+            NodeRef: Type
+        OptExpansion
+      RuleList
+        Rule
+          Node
+            NodeRef: IntType
+            OptInherit
+              NodeRef: Type
+          OptExpansion
+        RuleList

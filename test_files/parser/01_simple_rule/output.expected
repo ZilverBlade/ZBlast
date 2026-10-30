@@ -4,10 +4,11 @@ Start
       Node
         NodeRef: Expr
         OptInherit
-      ChildList
-        Child
-          LabeledIden
-            Iden: ID
-          ChildQual
+      OptExpansion
         ChildList
+          Child
+            LabeledIden
+              Iden: ID
+            ChildQual
+          ChildList
     RuleList
