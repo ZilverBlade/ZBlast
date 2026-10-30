@@ -69,6 +69,7 @@ namespace zblast {
         };
 
         struct Rule : ParseNode {
+            bool isAbstract;
             Ptr<Node> node;
             Ptr<ChildList> child_list;
         };
@@ -219,10 +220,20 @@ namespace zblast {
 
     static Ptr<parsetree::Rule> Parse_Rule(Parser &parser) {
         Ptr node = make_unique<parsetree::Rule>();
-        node->node = Parse_Node(parser);
-        parser.Accept(EToken_DOUBLE_COLON_EQ);
-        node->child_list = Parse_ChildList(parser);
-        parser.Accept(EToken_SEMICOLON);
+        ETokenType token = parser.Peek();
+        if (token == EToken_ABSTRACT) {
+            node->isAbstract = true;
+            parser.Accept(EToken_ABSTRACT);
+            node->node = Parse_Node(parser);
+            parser.Accept(EToken_SEMICOLON);
+        } else {
+            // Other case is node
+            node->isAbstract = false;
+            node->node = Parse_Node(parser);
+            parser.Accept(EToken_DOUBLE_COLON_EQ);
+            node->child_list = Parse_ChildList(parser);
+            parser.Accept(EToken_SEMICOLON);
+        }
         return node;
     }
 
@@ -230,7 +241,7 @@ namespace zblast {
         Ptr node = make_unique<parsetree::RuleList>();
         ETokenType token = parser.Peek();
         // FIRST
-        if (token == EToken_ID) {
+        if (token == EToken_ID || token == EToken_ABSTRACT) {
             node->isEpsilon = false;
             node->rule = Parse_Rule(parser);
             node->rule_list = Parse_RuleList(parser);

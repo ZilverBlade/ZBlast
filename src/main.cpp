@@ -8,6 +8,7 @@
  rule_list -> \epsilon
 
  rule -> node "::=" child_list ";"
+ rule -> "abstract" node ";"
  node -> node_ref opt_inherit
 
  node_ref -> ID
