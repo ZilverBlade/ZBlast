@@ -17,6 +17,8 @@ namespace zblast {
         [[nodiscard]] int CurrLine();
 
         [[nodiscard]] int CurrCol();
+        
+        void FillAstData(parsetree::ParseNode& node);
 
     private:
         Token *m_Ptr = nullptr;

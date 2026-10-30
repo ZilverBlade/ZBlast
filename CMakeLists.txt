@@ -20,6 +20,10 @@ add_custom_command(
 add_library(zblast_core STATIC
     ${LEXER_OUTPUT}
     src/parser.cpp
+    src/visitor.cpp
+    src/visitors/error_visitor.cpp
+    src/visitors/declaration_visitor.cpp
+    src/visitors/expansion_visitor.cpp
 )
 target_include_directories(zblast_core PUBLIC
     "${CMAKE_CURRENT_SOURCE_DIR}/src"

@@ -1,0 +1,2 @@
+Expr ::= <ID>;
+Expr ::= <INT_LITERAL>; // should error, Expr is already defined

@@ -1,0 +1,5 @@
+abstract Stmt;
+LetDecl : Stmt ::= <ID>; // let x;
+ConstDecl : Stmt ::= <ID> [Value:<INT_LITERAL>]; // const x: 0;
+VarDeclStmt : Stmt ::= /* variant */ LetDecl | ConstDecl;
+BlockStmt : Stmt ::= Stmt*;
