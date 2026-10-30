@@ -48,7 +48,7 @@ namespace zblast {
         void* ExpansionVisitor::Visit(parsetree::LabeledIden* node, void* data) {
             MemberSpecifier& specifier = *reinterpret_cast<MemberSpecifier*>(data);
             node->iden->Accept(this, &specifier);
-            
+            specifier.idenRef = node;
             if (!node->HasLabel) {
                 specifier.label = specifier.nodeName;
             }

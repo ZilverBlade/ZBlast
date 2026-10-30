@@ -10,6 +10,7 @@ namespace zblast {
             bool isAbstract;
             std::string className;
             parsetree::Node* declaration;
+            parsetree::Rule* rule;
             std::optional<std::string> classInherit;
         };
         class DeclarationVisitor : public Visitor {

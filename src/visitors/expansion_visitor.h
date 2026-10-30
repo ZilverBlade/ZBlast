@@ -13,21 +13,22 @@ namespace zblast {
             EMemberKind kind;
             std::string label;    // for function name
             std::string nodeName; // for determining which class
+            parsetree::LabeledIden* idenRef;
         };
         enum EExpansionKind {
             // Stmt -> get_Stmt
             // Branch:Stmt -> get_Branch
             EExpansion_Normal,
 
-            // Stmt* -> get_Stmts, get_Stmt(size_t), get_StmtCount()
-            // Arg:Expr* -> get_Args, get_Arg(size_t), get_ArgCount()
+            // Stmt* -> get_Stmts, get_Stmt(size_t), num_Stmts()
+            // Arg:Expr* -> get_Args, get_Arg(size_t), num_Args()
             EExpansion_List,
 
             // [Stmt] -> get_Stmt, has_Stmt()
             // [True:Stmt] -> get_True, has_True()
             EExpansion_Opt,
 
-            // VarInit | ConstInit -> get_VarInit, get_ConstInit(), has_VarInit, has_ConstInit()
+            // VarInit | ConstInit -> get_VarInit, get_ConstInit(), has_VarInit, has_ConstInit(), get_VarInitConstInit
             EExpansion_Variant
         };
         struct ExpansionMember {
