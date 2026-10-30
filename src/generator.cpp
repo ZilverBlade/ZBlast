@@ -1,6 +1,7 @@
 #include "generator.h"
 
-#include <chrono>
+#include <ctime>
+#include <iomanip>
 
 namespace zblast {
     void Generator::Generate(parsetree::Start* program, std::ostream& hpp, std::ostream& cpp, const std::string& fileName) {
