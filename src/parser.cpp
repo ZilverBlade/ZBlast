@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <cstdio>
+#include <vector>
 #include <stdexcept>
 #include <string>
 #include <memory>
@@ -11,25 +12,38 @@ using Str = std::string;
 template<typename T>
 using Ptr = std::unique_ptr<T>;
 
+template<typename T>
+using List = std::vector<T>;
+
 using std::make_unique;
 
 namespace zblast {
     namespace parsetree {
         struct ParseNode {
+            virtual const char *NodeName() const = 0;
+
+            virtual List<ParseNode *> Children() const { return {}; }
+            virtual List<Str> Values() const { return {}; }
         };
 
         struct NodeRef : ParseNode {
             Str ID;
+            const char *NodeName() const override { return "NodeRef"; }
+            List<Str> Values() const override { return {ID}; }
         };
 
-        struct OptInherit {
+        struct OptInherit : ParseNode {
             bool isEpsilon;
             Ptr<NodeRef> node_ref;
+            const char *NodeName() const override { return "OptInherit"; }
+            List<ParseNode *> Children() const { return {node_ref.get()}; }
         };
 
         struct Node : ParseNode {
             Ptr<NodeRef> node_ref;
             Ptr<OptInherit> opt_inherit;
+            const char *NodeName() const override { return "Node"; }
+            List<ParseNode *> Children() const { return {node_ref.get(), opt_inherit.get()}; }
         };
 
         struct Child;
@@ -37,12 +51,17 @@ namespace zblast {
         struct Iden : ParseNode {
             bool isLiteral;
             Str ID;
+            const char *NodeName() const override { return "Iden"; }
+            List<Str> Values() const override { return {ID}; }
         };
 
         struct LabeledIden : ParseNode {
             bool hasLabel;
             Str LABEL;
             Ptr<Iden> iden;
+            const char *NodeName() const override { return "LabeledIden"; }
+            List<ParseNode *> Children() const { return {iden.get()}; }
+            List<Str> Values() const override { return {LABEL}; }
         };
 
         struct ChildQual : ParseNode {
@@ -53,6 +72,9 @@ namespace zblast {
             } Mode;
 
             Ptr<Child> child;
+            const char *NodeName() const override { return "ChildQual"; }
+
+            List<ParseNode *> Children() const;
         };
 
         struct Child : ParseNode {
@@ -63,28 +85,45 @@ namespace zblast {
 
             Ptr<LabeledIden> labeled_iden;
             Ptr<ChildQual> child_qual;
+
+            const char *NodeName() const override { return "Child"; }
+            List<ParseNode *> Children() const { return {labeled_iden.get(), child_qual.get()}; }
         };
+
+        List<ParseNode *> ChildQual::Children() const { return {child.get()}; }
 
         struct ChildList : ParseNode {
             bool isEpsilon;
             Ptr<Child> child;
             Ptr<ChildList> child_list;
+
+            const char *NodeName() const override { return "ChildList"; }
+            List<ParseNode *> Children() const { return {child.get(), child_list.get()}; }
         };
 
         struct Rule : ParseNode {
             bool isAbstract;
             Ptr<Node> node;
             Ptr<ChildList> child_list;
+
+            const char *NodeName() const override { return "Rule"; }
+            List<ParseNode *> Children() const { return {node.get(), child_list.get()}; }
         };
 
         struct RuleList : ParseNode {
             bool isEpsilon;
             Ptr<Rule> rule;
             Ptr<RuleList> rule_list;
+
+            const char *NodeName() const override { return "RuleList"; }
+            List<ParseNode *> Children() const { return {rule.get(), rule_list.get()}; }
         };
 
         struct Start : ParseNode {
             Ptr<RuleList> rule_list;
+
+            const char *NodeName() const override { return "Start"; }
+            List<ParseNode *> Children() const { return {rule_list.get()}; }
         };
     }
 
