@@ -1,0 +1,42 @@
+name: CMake Test Build (Ubuntu GCC)
+permissions:
+  contents: read
+  
+on:
+  push:
+    branches: [ "**" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        compiler: [gcc]
+        build_type: [Release]
+        include:
+          - compiler: gcc
+            c: gcc
+            cxx: g++
+
+    steps:
+      - name: Install Dependencies
+        run: |
+          sudo apt install re2c
+      - name: Configure CMake (Linux)
+        run: >
+          cmake -B build
+          -DCMAKE_C_COMPILER=${{ matrix.c }}
+          -DCMAKE_CXX_COMPILER=${{ matrix.cxx }}
+          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+          -S .
+
+      - name: Build (Linux)
+        run: cmake --build build --config ${{ matrix.build_type }} --parallel 4
+
+      - name: Run Tests
+        working-directory: build
+        run: ctest --output-on-failure --rerun-failed 
+
