@@ -28,17 +28,37 @@ namespace zblast {
             node->Accept(&m_DeclVisitor, nullptr);
             node->Accept(&m_ExpVisitor, nullptr);
 
-            std::unordered_map<std::string, const Declaration *> foundDeclarations;
+            std::unordered_map<std::string, const Declaration *> foundDeclarations; // [name, decl]
+            std::unordered_map<std::string, std::vector<parsetree::NodeRef *>> referencedDeclarations; // [name, referenced by]
+            // Check for duplicate rules
             for (auto &decl: m_DeclVisitor.GetDeclarations()) {
                 if (auto it = foundDeclarations.find(decl.className); it == foundDeclarations.end()) {
                     foundDeclarations[decl.className] = &decl;
+                    if (decl.classInherit.has_value()) {
+                        referencedDeclarations[decl.classInherit.value()].push_back(decl.declaration->opt_inherit->node_ref.get());
+                    }
                 } else {
-                    PROVIDE_ERROR(Z001, decl.declaration->LineStart, decl.declaration->ColumnStart,
-                                  decl.className.c_str(),
-                                  it->second->declaration->LineStart, it->second->declaration->ColumnStart
+                    PROVIDE_ERROR(
+                        Z001, decl.declaration->LineStart, decl.declaration->ColumnStart,
+                        decl.className.c_str(),
+                        it->second->declaration->LineStart, it->second->declaration->ColumnStart
                     );
                 }
             }
+
+            // Check if inherited classes exist
+            for (auto & [declName, refs]: referencedDeclarations) {
+                if (!foundDeclarations.contains(declName)) {
+                    for (auto& ref : refs) {
+                        PROVIDE_ERROR(
+                            Z003, ref->LineStart, ref->ColumnStart, 
+                            declName.c_str()
+                        );
+                    }
+                }
+            }
+
+
             return VisitChildren(node, data);
         }
     } // namespace visitors

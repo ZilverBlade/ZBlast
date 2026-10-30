@@ -118,6 +118,11 @@ TEST_F(AstTestFixture, TestCase06InvalidUndefinedRef) {
     RunAstTestCase("06_invalid_undefined_ref");
 }
 
+
+TEST_F(AstTestFixture, TestCase07InvalidUndefinedInherit) {
+    RunAstTestCase("07_invalid_undefined_inheit");
+}
+
 // --- Dynamic Directory Reading Test ---
 
 TEST_F(AstTestFixture, RunAllAstSubdirectoryCases) {
