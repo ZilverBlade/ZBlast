@@ -27,7 +27,7 @@ namespace zblast {
 
             virtual List<ParseNode*> Children() const { return {}; }
             virtual List<Str> Values() const { return {}; }
-            virtual void* Accept(Visitor* visitor, void* data) {
+            [[maybe_unused]] virtual void* Accept(Visitor* visitor, void* data) {
                 char errBuf[128];
                 snprintf(errBuf, 128, "Missing Accept() implementation for %s!", typeid(this).name());
                 throw std::runtime_error(errBuf);
@@ -82,6 +82,16 @@ namespace zblast {
             void* Accept(Visitor* visitor, void* data) override { return visitor->Visit(this, data); }
         };
 
+        struct VariantQual : ParseNode {
+            bool IsEpsilon;
+            Ptr<LabeledIden> labeled_iden;
+            Ptr<VariantQual> variant_qual;
+            const char* NodeName() const override { return "VariantQual"; }
+
+            List<ParseNode*> Children() const override { return { labeled_iden.get(), variant_qual.get() }; }
+            void* Accept(Visitor* visitor, void* data) override { return visitor->Visit(this, data); }
+        };
+
         struct ChildQual : ParseNode {
             enum {
                 Mode_List,
@@ -89,10 +99,10 @@ namespace zblast {
                 IsEpsilon,
             } Mode;
 
-            Ptr<Child> child;
+            Ptr<VariantQual> variant_qual;
             const char* NodeName() const override { return "ChildQual"; }
 
-            List<ParseNode*> Children() const override;
+            List<ParseNode*> Children() const override { return { variant_qual.get() }; }
             void* Accept(Visitor* visitor, void* data) override { return visitor->Visit(this, data); }
         };
 
@@ -109,8 +119,6 @@ namespace zblast {
             List<ParseNode*> Children() const override { return { labeled_iden.get(), child_qual.get() }; }
             void* Accept(Visitor* visitor, void* data) override { return visitor->Visit(this, data); }
         };
-
-        inline List<ParseNode*> ChildQual::Children() const { return { child.get() }; }
 
         struct ChildList : ParseNode {
             bool IsEpsilon = false;

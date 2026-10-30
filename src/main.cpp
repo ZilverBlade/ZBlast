@@ -31,9 +31,11 @@
  iden -> "<" ID ">"
  child -> "[" labeled_iden "]"    # Optional
  child -> labeled_iden child_qual # Literal/Identifier
- child_qual -> "*"              # List
- child_qual -> "|" child        # Variant
+ child_qual -> "*"                # List
+ child_qual -> variant_qual       # Variant
  child_qual -> \epsilon
+ variant_qual -> "|" labeled_iden variant_qual  
+ variant_qual -> \epsilon         
 
 */
 

@@ -45,10 +45,10 @@ Start
                   LabeledIden
                     Iden: LetDecl
                   ChildQual
-                    Child
+                    VariantQual
                       LabeledIden
                         Iden: ConstDecl
-                      ChildQual
+                      VariantQual
                 ChildList
           RuleList
             Rule

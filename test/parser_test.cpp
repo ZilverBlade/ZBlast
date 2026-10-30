@@ -198,18 +198,6 @@ TEST_F(ParserTestFixture, ParseTestCase07EmptyIdent) {
     RunParserTestCase("07_empty_ident");
 }
 
-TEST_F(ParserTestFixture, ParseAllParserSubdirectoryCases) {
-    std::filesystem::path parserDir = GetTestDir() / "parser";
-    int count = 0;
-    for (const auto &entry : std::filesystem::directory_iterator(parserDir)) {
-        if (entry.is_directory()) {
-            RunParserTestCase(entry.path().filename().string());
-            count++;
-        }
-    }
-    EXPECT_GE(count, 6);
-}
-
 // --- Syntax Error Tests ---
 
 TEST_F(ParserTestFixture, RejectMissingSemicolon) {

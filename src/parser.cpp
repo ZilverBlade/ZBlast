@@ -63,7 +63,22 @@ namespace zblast {
         }
     }
 
-    static Ptr<parsetree::Child> Parse_Child(Parser &parser);
+    static Ptr<parsetree::VariantQual> Parse_VariantQual(Parser &parser) {
+        Ptr node = make_unique<parsetree::VariantQual>();
+        parser.FillAstData(*node);
+        ETokenType token = parser.Peek();
+        // FIRST
+        if (token == EToken_PIPE) {
+            node->IsEpsilon = false;
+            parser.Accept(EToken_PIPE);
+            node->labeled_iden = Parse_LabeledIden(parser);
+            node->variant_qual = Parse_VariantQual(parser);
+            return node;
+        } else {
+            node->IsEpsilon = true;
+            return node;   
+        }
+    }
 
     static Ptr<parsetree::ChildQual> Parse_ChildQual(Parser &parser) {
         Ptr node = make_unique<parsetree::ChildQual>();
@@ -77,8 +92,7 @@ namespace zblast {
         }
         if (token == EToken_PIPE) {
             node->Mode = parsetree::ChildQual::Mode_Variant;
-            parser.Accept(EToken_PIPE);
-            node->child = Parse_Child(parser);
+            node->variant_qual = Parse_VariantQual(parser);
             return node;
         }
         // FOLLOW

@@ -7,6 +7,7 @@ namespace zblast {
     void* Visitor::Visit(parsetree::Node* node, void* data) { return VisitChildren(node, data); }
     void* Visitor::Visit(parsetree::Iden* node, void* data) { return VisitChildren(node, data); }
     void* Visitor::Visit(parsetree::LabeledIden* node, void* data) { return VisitChildren(node, data); }
+    void* Visitor::Visit(parsetree::VariantQual* node, void* data) { return VisitChildren(node, data); }
     void* Visitor::Visit(parsetree::ChildQual* node, void* data) { return VisitChildren(node, data); }
     void* Visitor::Visit(parsetree::Child* node, void* data) { return VisitChildren(node, data); }
     void* Visitor::Visit(parsetree::ChildList* node, void* data) { return VisitChildren(node, data); }

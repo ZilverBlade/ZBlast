@@ -123,22 +123,3 @@ TEST_F(AstTestFixture, TestCase07InvalidUndefinedInherit) {
     RunAstTestCase("07_invalid_undefined_inheit");
 }
 
-// --- Dynamic Directory Reading Test ---
-
-TEST_F(AstTestFixture, RunAllAstSubdirectoryCases) {
-    std::filesystem::path astDir = GetTestDir() / "ast";
-    ASSERT_TRUE(std::filesystem::exists(astDir)) << "AST directory not found: " << astDir;
-
-    std::vector<std::string> cases;
-    for (const auto &entry : std::filesystem::directory_iterator(astDir)) {
-        if (entry.is_directory()) {
-            cases.push_back(entry.path().filename().string());
-        }
-    }
-    std::sort(cases.begin(), cases.end());
-
-    EXPECT_GE(cases.size(), 6u);
-    for (const auto &caseName : cases) {
-        RunAstTestCase(caseName);
-    }
-}
