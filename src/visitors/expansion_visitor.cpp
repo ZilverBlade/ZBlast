@@ -3,6 +3,11 @@
 
 namespace zblast {
     namespace visitors {
+        std::vector<Expansion> ExpansionVisitor::CollectExpansions(parsetree::Start* program) {
+            program->Accept(this, nullptr);
+            return std::move(m_Expansions);
+        }
+
         void* ExpansionVisitor::Visit(parsetree::Rule* node, void* data) {
             Expansion expansion;
             expansion.rule = node;

@@ -42,16 +42,16 @@ namespace zblast {
         };
         class ExpansionVisitor : public Visitor {
         public:
-            void* Visit(parsetree::Rule* node, void* data);
-            void* Visit(parsetree::ChildList* node, void* data);
-            void* Visit(parsetree::Child* node, void* data);
-            void* Visit(parsetree::LabeledIden* node, void* data);
-            void* Visit(parsetree::Iden* node, void* data);
-            void* Visit(parsetree::VariantQual* node, void* data);
+            std::vector<Expansion> CollectExpansions(parsetree::Start* program);
 
-            const std::vector<Expansion>& GetExpansions() const {
-                return m_Expansions;
-            }
+        protected:
+            void* Visit(parsetree::Rule* node, void* data) override;
+            void* Visit(parsetree::ChildList* node, void* data) override;
+            void* Visit(parsetree::Child* node, void* data) override;
+            void* Visit(parsetree::LabeledIden* node, void* data) override;
+            void* Visit(parsetree::Iden* node, void* data) override;
+            void* Visit(parsetree::VariantQual* node, void* data) override;
+
         private:
             std::vector<Expansion> m_Expansions;
         };

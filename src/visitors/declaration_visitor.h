@@ -15,11 +15,11 @@ namespace zblast {
         };
         class DeclarationVisitor : public Visitor {
         public:
-            void* Visit(parsetree::Rule* node, void* data);
+            std::vector<Declaration> CollectDeclarations(parsetree::Start* program);
 
-            const std::vector<Declaration>& GetDeclarations() const {
-                return m_Declarations;
-            }
+        protected:
+            void* Visit(parsetree::Rule* node, void* data) override;
+
         private:
             std::vector<Declaration> m_Declarations;
         };

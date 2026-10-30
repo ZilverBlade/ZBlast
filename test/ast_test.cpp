@@ -67,9 +67,7 @@ protected:
         auto tree = parser.Parse(tokens.data());
         ASSERT_NE(tree, nullptr);
 
-        visitors::ErrorVisitor errorVisitor;
-        errorVisitor.Visit(tree.get(), nullptr);
-        const auto &errors = errorVisitor.GetErrors();
+        const auto &errors = visitors::ErrorVisitor().CollectErrors(tree.get());
 
         std::string actualOutput;
         for (size_t i = 0; i < errors.size(); ++i) {

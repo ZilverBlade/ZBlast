@@ -1,7 +1,5 @@
 #pragma once
 #include "visitor.h"
-#include "visitors/declaration_visitor.h"
-#include "visitors/expansion_visitor.h"
 #include <string>
 #include <vector>
 
@@ -62,14 +60,12 @@ namespace zblast {
 
         class ErrorVisitor : public Visitor {
         public:
-            void* Visit(parsetree::Start* node, void* data);
+            std::vector<Error> CollectErrors(parsetree::Start* program);
 
-            const std::vector<Error>& GetErrors() const {
-                return m_Errors;
-            }
+        protected:
+            void* Visit(parsetree::Start* node, void* data) override;
+
         private:
-            DeclarationVisitor m_DeclVisitor;
-            ExpansionVisitor m_ExpVisitor;
 
             std::vector<Error> m_Errors;
         };

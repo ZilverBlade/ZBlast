@@ -2,6 +2,9 @@
 #include "declaration_visitor.h"
 #include "parsetree.h"
 #include "util.h"
+
+#include "visitors/expansion_visitor.h"
+#include "visitors/declaration_visitor.h"
 #include "visitors/expansion_visitor.h"
 
 #include <unordered_map>
@@ -24,15 +27,20 @@ namespace zblast {
                 k_ErrorSevAlignedStrings[k_ErrorDefs[code].severity], k_ErrorDefs[code].code,
                 line, column, message.c_str());
         }
+        
+        std::vector<Error> ErrorVisitor::CollectErrors(parsetree::Start* program) {
+            program->Accept(this, nullptr);
+            return std::move(m_Errors);
+        }
 
         void *ErrorVisitor::Visit(parsetree::Start *node, void *data) {
-            node->Accept(&m_DeclVisitor, nullptr);
-            node->Accept(&m_ExpVisitor, nullptr);
+            const auto& declarations = DeclarationVisitor().CollectDeclarations(node);
+            const auto& expansions = ExpansionVisitor().CollectExpansions(node);
 
             std::unordered_map<std::string, const Declaration *> foundDeclarations; // [name, decl]
             std::unordered_map<std::string, std::vector<parsetree::AstNode *>> referencedIdentifiers; // [name, referenced by]
             // Check for duplicate rules
-            for (auto &decl: m_DeclVisitor.GetDeclarations()) {
+            for (auto &decl: declarations) {
                 if (auto it = foundDeclarations.find(decl.className); it == foundDeclarations.end()) {
                     foundDeclarations[decl.className] = &decl;
                     if (decl.classInherit.has_value()) {
@@ -47,7 +55,7 @@ namespace zblast {
                 }
             }
             // Check for duplicate member names
-            for (auto &exp: m_ExpVisitor.GetExpansions()) {
+            for (auto &exp: expansions) {
                 std::unordered_map<std::string, std::vector<parsetree::AstNode *>> declaredMembers; // [name, referenced by]
                 for (auto& mem : exp.members) {
                     for (auto& spec : mem.specifiers) {
@@ -69,6 +77,7 @@ namespace zblast {
                     }
                 }
                 for (auto& [label, memDecl] : declaredMembers) {
+                    if (label.empty()) continue;
                     if (memDecl.size() > 1) {
                         for (int i = 1; i < memDecl.size(); ++i) {
                             PROVIDE_ERROR(
@@ -83,6 +92,7 @@ namespace zblast {
 
             // Check if inherited classes exist
             for (auto& [declName, refs]: referencedIdentifiers) {
+                if (declName.empty()) continue;
                 if (!foundDeclarations.contains(declName)) {
                     for (auto& ref : refs) {
                         PROVIDE_ERROR(

@@ -1,10 +1,18 @@
+#include <cstdlib>
 #include <cstring>
 #include <iostream>
+#include <memory>
+#include <stdexcept>
 #include <vector>
 
+#include "generator.h"
 #include "lexer.h"
 #include "parser.h"
 #include "parsetree.h"
+#include "util.h"
+#include "generators/ast_code_gen.h"
+#include "generators/visitor_code_gen.h"
+#include "visitors/error_visitor.h"
 
 /*
 
@@ -53,7 +61,6 @@ static std::vector<zblast::Token> Tokenize(const char *src) {
         tok.lineEnd = l;
         tok.lineStart = l;
         tok.colStart = tok.colEnd - static_cast<int>(tok.text.length());
-        tokens.push_back(tok);
         if (tok.type == zblast::EToken_EOF) {
             isEnd = true;
         }
@@ -62,67 +69,108 @@ static std::vector<zblast::Token> Tokenize(const char *src) {
     return tokens;
 }
 
+enum EGenerationMode {
+    EGeneration_Ast,
+    EGeneration_Visitor,
+};
+
 int main(int argc, char **argv) {
     try {
         if (argc < 4) {
-            throw std::runtime_error("Insufficient arguments provided, usage: [-t/-p/-g] <source> <target>");
+            throw std::runtime_error("Insufficient arguments provided, usage: [-av] <source> <target>");
         }
-        bool doTokenize = strcmp(argv[1], "-t") == 0;
-        bool doEmitParseTree = strcmp(argv[1], "-p") == 0;
-        bool doGeneration = strcmp(argv[1], "-g") == 0;
+        EGenerationMode mode;
+        if (strcmp(argv[1], "-a") == 0) {
+            mode = EGeneration_Ast;
+        } else if (strcmp(argv[1], "-v") == 0) {
+            mode = EGeneration_Visitor;
+        } else {
+            throw std::runtime_error(zblast::util::Format("Invalid argument \"%s\"", argv[1]));
+        }
 
-        const char *srcFile = argv[2];
-        const char *dstFile = argv[3];
+        std::string srcFile = argv[2];
+        std::string dstFile = argv[3];
 
-        FILE *srcTextF = fopen(srcFile, "r");
+        // Step 0: reading
+        FILE *srcTextF = fopen(srcFile.c_str(), "r");
         if (!srcTextF) {
             char errBuf[128];
-            snprintf(errBuf, 128, "Failed to open source file '%s'!", srcFile);
-            throw std::runtime_error(errBuf);
-        }
-        FILE *dstTextF = fopen(dstFile, "w+");
-        if (!dstTextF) {
-            char errBuf[128];
-            snprintf(errBuf, 128, "Failed to open write to target file '%s'!", dstFile);
+            snprintf(errBuf, 128, "Failed to open source file '%s'!", srcFile.c_str());
             throw std::runtime_error(errBuf);
         }
 
-        if (doTokenize || doEmitParseTree || doGeneration) {
-            std::string text;
-            fseek(srcTextF, 0, SEEK_SET);
-            fseek(srcTextF, 0, SEEK_END);
-            long int fsize = ftell(srcTextF);
-            text.resize(fsize);
-            fseek(srcTextF, 0, SEEK_SET);
-            fread(text.data(), text.size(), text.size(), srcTextF);
-            fclose(srcTextF);
-            auto tokens = Tokenize(text.c_str());
-            if (doTokenize) {
-                for (auto tok: tokens) {
-                    fputs(zblast::ETokenType_ToString(tok.type), dstTextF);
-                    if (tok.type == zblast::EToken_ID || tok.type == zblast::EToken_LABEL || tok.type ==
-                        zblast::EToken_ERR) {
-                        fprintf(dstTextF, " \"%.*s\"", static_cast<int>(tok.text.length()), tok.text.data());
-                    }
-                    if (tok.type == zblast::EToken_ERR) {
-                        fprintf(dstTextF, " @ %d:%d", tok.line, tok.col);
-                    }
-                    fputc('\n', dstTextF);
-                }
-            } else if (doEmitParseTree || doGeneration) {
-                if (doEmitParseTree) {
-                    zblast::Parser parser;
-                    auto prog = parser.Parse(tokens.data());
-                    std::stringstream ss;
-                    zblast::parsetree::PrintTree(prog.get(), ss);
-                    fputs(ss.str().c_str(), dstTextF);
-                } else if (doGeneration) {
-                    // TODO
-                    std::cerr << "Not implemented!" << std::endl;
-                }
-            }
-            fclose(dstTextF);
+        // Step 1: scanning
+        std::string text;
+        fseek(srcTextF, 0, SEEK_SET);
+        fseek(srcTextF, 0, SEEK_END);
+        long int fsize = ftell(srcTextF);
+        text.resize(fsize);
+        fseek(srcTextF, 0, SEEK_SET);
+        fread(text.data(), text.size(), text.size(), srcTextF);
+        fclose(srcTextF);
+        auto tokens = Tokenize(text.c_str());
+
+
+        // Step 2: parsing
+        zblast::Parser parser;
+        auto prog = parser.Parse(tokens.data());
+            
+        
+        // Step 3: Check the AST
+
+        bool hasError = false;
+        const auto& errors = zblast::visitors::ErrorVisitor().CollectErrors(prog.get());
+        for (auto& error : errors) {
+            std::cerr << error.PrettyPrint() << std::endl;
+            hasError |= zblast::visitors::k_ErrorDefs[error.code].severity == zblast::visitors::ESeverity_Error;
+        } 
+
+        if (hasError) {
+            return EXIT_FAILURE;
         }
+
+        // Step 4: open the output file
+        size_t pos = std::min(dstFile.find_last_of('\\'), dstFile.find_last_of('/'));
+        std::string dstFileNameOnly = pos == std::string::npos ? dstFile : dstFile.substr(pos + 1);   
+        std::string dstFileHpp = dstFile + ".hpp";   
+        std::string dstFileCpp = dstFile + ".cpp";   
+
+        FILE* dstTextFHpp = fopen(dstFileHpp.c_str(), "w+");
+        if (!dstTextFHpp) {
+            throw std::runtime_error(zblast::util::Format("Failed to open write to target file '%s'!", dstFileHpp.c_str()));
+        }
+        FILE* dstTextFCpp = fopen(dstFileCpp.c_str(), "w+");
+        if (!dstTextFCpp) {
+            throw std::runtime_error(zblast::util::Format("Failed to open write to target file '%s'!", dstFileCpp.c_str()));
+        }
+
+        // Step 5: finally GENERATE
+        
+        std::unique_ptr<zblast::Generator> generator; 
+        switch (mode) {
+            case EGeneration_Ast: {
+                std::cout << "Generating .cpp/.hpp files for AST..." << std::endl;
+                generator = std::make_unique<zblast::generators::AstCodeGen>();
+                break;
+            }
+            case EGeneration_Visitor: {
+                std::cout << "Generating .cpp/.hpp files for Visitors..." << std::endl;
+                generator = std::make_unique<zblast::generators::VisitorCodeGen>();
+                break;
+            }
+            default: throw std::runtime_error("BAD CASE!!! This should never happen!");
+        }
+
+        zblast::util::FileBuf hppBuf(dstTextFHpp);
+        zblast::util::FileBuf cppBuf(dstTextFCpp);
+
+        std::ostream hppStream(&hppBuf);
+        std::ostream cppStream(&cppBuf);
+
+        generator->Generate(prog.get(), hppStream, cppStream, dstFileNameOnly);
+
+        fclose(dstTextFHpp);
+        fclose(dstTextFCpp);
     } catch (std::runtime_error &ex) {
         std::cerr << ex.what() << std::endl;
         return EXIT_FAILURE;

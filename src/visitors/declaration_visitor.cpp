@@ -3,6 +3,11 @@
 
 namespace zblast {
     namespace visitors {
+        std::vector<Declaration> DeclarationVisitor::CollectDeclarations(parsetree::Start* program) {
+            program->Accept(this, nullptr);
+            return std::move(m_Declarations);
+        }
+
         void* DeclarationVisitor::Visit(parsetree::Rule* node, void* data) {
             Declaration decl;
             decl.isAbstract = node->IsAbstract;
