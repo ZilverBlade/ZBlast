@@ -234,7 +234,7 @@ TEST(LexerTest, MainSnippetTokenization) {
 }
 
 TEST(LexerTest, TestFile01SimpleRule) {
-    std::string content = ReadTestFile("lexer/01_simple_rule.zb");
+    std::string content = ReadTestFile("lexer/01_simple_rule.zast");
     auto tokens = Tokenize(content);
 
     std::vector<ETokenType> expected = {
@@ -246,7 +246,7 @@ TEST(LexerTest, TestFile01SimpleRule) {
 }
 
 TEST(LexerTest, TestFile02Inheritance) {
-    std::string content = ReadTestFile("lexer/02_inheritance.zb");
+    std::string content = ReadTestFile("lexer/02_inheritance.zast");
     auto tokens = Tokenize(content);
 
     EXPECT_EQ(tokens[0].type, EToken_ID);
@@ -260,7 +260,7 @@ TEST(LexerTest, TestFile02Inheritance) {
 }
 
 TEST(LexerTest, TestFile03Abstract) {
-    std::string content = ReadTestFile("lexer/03_abstract.zb");
+    std::string content = ReadTestFile("lexer/03_abstract.zast");
     auto tokens = Tokenize(content);
 
     std::vector<ETokenType> expected = {
@@ -274,7 +274,7 @@ TEST(LexerTest, TestFile03Abstract) {
 }
 
 TEST(LexerTest, TestFile04ChildrenTypes) {
-    std::string content = ReadTestFile("lexer/04_children_types.zb");
+    std::string content = ReadTestFile("lexer/04_children_types.zast");
     auto tokens = Tokenize(content);
 
     // Make sure no ERR tokens exist in valid file
@@ -285,7 +285,7 @@ TEST(LexerTest, TestFile04ChildrenTypes) {
 }
 
 TEST(LexerTest, TestFile05FullAst) {
-    std::string content = ReadTestFile("lexer/05_full_ast.zb");
+    std::string content = ReadTestFile("lexer/05_full_ast.zast");
     auto tokens = Tokenize(content);
 
     for (const auto& tok : tokens) {
@@ -295,7 +295,7 @@ TEST(LexerTest, TestFile05FullAst) {
 }
 
 TEST(LexerTest, TestFile06CommentsAndWhitespace) {
-    std::string content = ReadTestFile("lexer/06_comments_and_whitespace.zb");
+    std::string content = ReadTestFile("lexer/06_comments_and_whitespace.zast");
     auto tokens = Tokenize(content);
 
     for (const auto& tok : tokens) {
@@ -305,8 +305,8 @@ TEST(LexerTest, TestFile06CommentsAndWhitespace) {
 }
 
 TEST(LexerTest, TestFile07SyntaxErrorIsLexicallyValid) {
-    // 07_syntax_error.zb has syntax errors for the parser, but all characters are valid tokens
-    std::string content = ReadTestFile("lexer/07_syntax_error.zb");
+    // 07_syntax_error.zast has syntax errors for the parser, but all characters are valid tokens
+    std::string content = ReadTestFile("lexer/07_syntax_error.zast");
     auto tokens = Tokenize(content);
 
     // All tokens should be valid (not ERR)
@@ -317,7 +317,7 @@ TEST(LexerTest, TestFile07SyntaxErrorIsLexicallyValid) {
 }
 
 TEST(LexerTest, TestFile08LexicalErrorContainsErrTokens) {
-    std::string content = ReadTestFile("lexer/08_lexical_error.zb");
+    std::string content = ReadTestFile("lexer/08_lexical_error.zast");
     auto tokens = Tokenize(content);
 
     bool foundErr = false;
@@ -327,11 +327,11 @@ TEST(LexerTest, TestFile08LexicalErrorContainsErrTokens) {
             break;
         }
     }
-    EXPECT_TRUE(foundErr) << "Expected to find EToken_ERR in 08_lexical_error.zb";
+    EXPECT_TRUE(foundErr) << "Expected to find EToken_ERR in 08_lexical_error.zast";
 }
 
 TEST(LexerTest, TestFile09Empty) {
-    std::string content = ReadTestFile("lexer/09_empty.zb");
+    std::string content = ReadTestFile("lexer/09_empty.zast");
     auto tokens = Tokenize(content);
 
     ASSERT_EQ(tokens.size(), 1u);

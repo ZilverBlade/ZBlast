@@ -41,18 +41,18 @@ protected:
         ParseText(content.c_str());
     }
 
-    // Runs a parser test case: reads input.zb, writes output.out with indentation,
+    // Runs a parser test case: reads input.zast, writes output.out with indentation,
     // and compares against output.expected
     void RunParserTestCase(const std::string &caseName) {
         std::filesystem::path testDir = GetTestDir() / "parser" / caseName;
-        std::filesystem::path inputPath = testDir / "input.zb";
+        std::filesystem::path inputPath = testDir / "input.zast";
         std::filesystem::path expectedPath = testDir / "output.expected";
         std::filesystem::path outputPath = testDir / "output.out";
 
         ASSERT_TRUE(std::filesystem::exists(inputPath)) << "Missing input: " << inputPath;
         ASSERT_TRUE(std::filesystem::exists(expectedPath)) << "Missing expected: " << expectedPath;
 
-        std::string content = ReadTestFile((std::filesystem::path("parser") / caseName / "input.zb").string());
+        std::string content = ReadTestFile((std::filesystem::path("parser") / caseName / "input.zast").string());
         auto tokens = Tokenize(content);
         ASSERT_FALSE(tokens.empty());
         ASSERT_EQ(tokens.back().type, EToken_EOF);
@@ -226,6 +226,6 @@ TEST_F(ParserTestFixture, RejectMissingDoubleColonEq) {
 
 TEST_F(ParserTestFixture, RejectInvalidSyntaxFile) {
     EXPECT_ANY_THROW({
-        ParseFile("lexer/07_syntax_error.zb");
+        ParseFile("lexer/07_syntax_error.zast");
         });
 }
