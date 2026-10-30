@@ -1,9 +1,11 @@
 #include "ast_code_gen.h"
 #include "parsetree.h"
+#include "visitors/expansion_visitor.h"
 
 namespace zblast {
     namespace generators {
         void AstCodeGen::Generate(parsetree::Start* program, std::ostream& hpp, std::ostream& cpp) {
+            // biiig header
             hpp << R"(
 class AstVisitor; // zblast -v
 
@@ -20,8 +22,8 @@ public:
             [[maybe_unused]] Iterator operator-- (int);
             [[maybe_unused]] Iterator& operator--();
 
-            [[nodiscard]] bool operator== (const Iterator& other);
-            [[nodiscard]] bool operator!= (const Iterator& other);
+            [[nodiscard]] bool operator== (const Iterator& other) const;
+            [[nodiscard]] bool operator!= (const Iterator& other) const;
 
             [[nodiscard]] AstNode* operator*();
             [[nodiscard]] AstNode const* operator*() const;
@@ -35,12 +37,15 @@ public:
         ChildList(AstNode* node);
         ~ChildList();
 
-        [[nodiscard]] Iterator start() const;
+        [[nodiscard]] Iterator begin() const;
         [[nodiscard]] Iterator end() const;
 
-        [[nodiscard]] AstNode* operator[](::size_t index);
-        [[nodiscard]] AstNode const* operator[](::size_t index) const;
+        [[nodiscard]] AstNode* operator[](::uint32_t index);
+        [[nodiscard]] AstNode const* operator[](::uint32_t index) const;
 
+        [[nodiscard]] uint32_t size() const;
+        [[nodiscard]] bool empty() const;
+        
     private:
         AstNode* m_Node;
 
@@ -106,11 +111,11 @@ AstNode::ChildList::Iterator::~Iterator() {}
     return *this;
 }
 
-bool AstNode::ChildList::Iterator::operator== (const AstNode::ChildList::Iterator& other) {
+bool AstNode::ChildList::Iterator::operator== (const AstNode::ChildList::Iterator& other) const {
     return this->m_Index == other.m_Index && this->m_Size == other.m_Size && this->m_Node == other.m_Node;
 }
 
-bool AstNode::ChildList::Iterator::operator!= (const AstNode::ChildList::Iterator& other) {
+bool AstNode::ChildList::Iterator::operator!= (const AstNode::ChildList::Iterator& other) const {
     return !(*this == other);
 }
 
@@ -125,7 +130,7 @@ bool AstNode::ChildList::Iterator::operator!= (const AstNode::ChildList::Iterato
 AstNode::ChildList::ChildList(AstNode* node) : m_Node(node) {}
 AstNode::ChildList::~ChildList() {}
 
-::ast::AstNode::ChildList::Iterator AstNode::ChildList::start() const {
+::ast::AstNode::ChildList::Iterator AstNode::ChildList::begin() const {
     return Iterator(this->m_Node, 0);
 }
 
@@ -133,12 +138,20 @@ AstNode::ChildList::~ChildList() {}
     return Iterator(this->m_Node, this->m_Node->num_children());
 }
 
-::ast::AstNode* AstNode::ChildList::operator[](::size_t index) {
+::ast::AstNode* AstNode::ChildList::operator[](::uint32_t index) {
     return this->m_Node->child(index);
 }
 
-::ast::AstNode const* AstNode::ChildList::operator[](::size_t index) const {
+::ast::AstNode const* AstNode::ChildList::operator[](::uint32_t index) const {
     return this->m_Node->child(index);
+}
+
+uint32_t AstNode::ChildList::size() const {
+    return this->m_Node->num_children();
+}
+
+bool AstNode::ChildList::empty() const {
+    return this->size() == 0;
 }
 
 AstNode::AstNode() {}
@@ -158,6 +171,89 @@ AstNode::~AstNode() {}
     return nullptr;
 }
 )";
+
+            // Now actually generate the files
+            auto expansions = visitors::ExpansionVisitor().CollectExpansions(program);
+            
+            for (auto& exp : expansions) {
+                std::string baseClass;
+                std::string childCount = "";
+                if (!exp.rule->node->opt_inherit->IsEpsilon) {
+                    baseClass = exp.rule->node->opt_inherit->node_ref->ID;
+                    childCount = baseClass + "::num_children()";
+                } else {
+                    baseClass = "AstNode";
+                    childCount = "0";
+                }
+                hpp << R"(
+class )" << exp.className << R"( : public ::ast::)" << baseClass << R"( {
+public:
+    [[nodiscard]]    ::ast::AstNode*       child(::uint32_t index) override;
+    [[nodiscard]]    ::ast::AstNode const* child(::uint32_t index) const override;
+    [[nodiscard]]    ::uint32_t            num_children() const override;
+
+    [[maybe_unused]] void* accept(AstVisitor* visitor, void* data) override;
+)";
+            std::string getChildFromIndex = " if (false) { assert(false); }";
+            for (auto& mem : exp.members) {
+                std::string member0 = "m_Member_" + mem.specifiers[0].label;
+                std::string specifier0;
+                if (mem.specifiers[0].kind == visitors::EMember_Identifier) {
+                    specifier0 = "::ast::" + mem.specifiers[0].nodeName + "*";
+                } else if (mem.specifiers[0].kind == visitors::EMember_Literal) {
+                    specifier0 = "String /*" + mem.specifiers[0].nodeName + "*/";
+                }
+                if (mem.kind == visitors::EExpansion_Normal) {
+                    hpp << "public: " << specifier0 << " get_" << mem.specifiers[0].label << "();\n";
+                    hpp << "private: " << specifier0 << " " << member0 << ";\n";
+                    cpp << specifier0 << " " << exp.className << "::get_" << mem.specifiers[0].label << "() { "
+                        "return " << member0 << "; }\n";
+                    if (mem.specifiers[0].kind == visitors::EMember_Identifier) {
+                        getChildFromIndex += "\n else if (index==(" + childCount + ")) { return " + member0 + "; }";
+                        childCount += "+1U";
+                    }
+                } else if (mem.kind == visitors::EExpansion_Opt) {
+                    hpp << "public: bool has_" << mem.specifiers[0].label << "();\n";
+                    hpp << "public: " << specifier0 << " get_" << mem.specifiers[0].label << "();\n";
+                    hpp << "private: Opt<" << specifier0 << "> " << member0 << ";\n";
+                    cpp << "bool " << exp.className << "::has_" << mem.specifiers[0].label << "() { return this->" << member0 << ".has_value(); }\n";
+                    cpp << specifier0 << " " << exp.className << "::get_" << mem.specifiers[0].label << "() { "
+                        "assert(this->has_" << mem.specifiers[0].label << "() && \"Cannot get " << mem.specifiers[0].label << "!\"); "
+                        "return this->" << member0 << ".value(); }\n";
+                    if (mem.specifiers[0].kind == visitors::EMember_Identifier) {
+                        getChildFromIndex += "\n else if (" + member0 + ".has_value() && index==(" + childCount + ")) { return " + member0 + ".value(); }";
+                        childCount += "+(this->" + member0 + ".has_value()?1U:0U)";
+                    }
+                } else if (mem.kind == visitors::EExpansion_List) {
+                    hpp << "public: uint32_t num_" << mem.specifiers[0].label << "s();\n";
+                    hpp << "public: List<" << specifier0 << "> const& get_" << mem.specifiers[0].label << "s();\n";
+                    hpp << "public: " << specifier0 << " get_" << mem.specifiers[0].label << "(uint32_t index);\n";
+                    hpp << "private: List<" << specifier0 << "> " << member0 << ";\n";
+                    cpp << "uint32_t " << exp.className << "::num_" << mem.specifiers[0].label << "s() { return static_cast<uint32_t>(this->" << member0 << ".size()); }\n";
+                    cpp << "List<" << specifier0 << "> const& " << exp.className << "::get_" << mem.specifiers[0].label << "s() { return this->" << member0 << "; }\n";
+                    cpp << specifier0 << " " << exp.className << "::get_" << mem.specifiers[0].label << "(uint32_t index) { "
+                        "assert(index < this->" << member0 << ".size() && \"Index out of bounds\"); return this->" << member0 << ".at(index); }\n";
+                    
+                    if (mem.specifiers[0].kind == visitors::EMember_Identifier) {
+                        getChildFromIndex += "\n else if (index >= (" + childCount + ") && index < ((" + childCount + ") + static_cast<uint32_t>(" + member0 + ".size()))) { return " + member0 + ".at(index-(" + childCount + ")); }";
+                        childCount += "+static_cast<uint32_t>(this->" + member0 + ".size())";
+                    }
+                }
+            }
+            cpp << R"(
+::ast::AstNode*       )" << exp.className << R"(::child(::uint32_t index) { 
+)" << getChildFromIndex << R"(
+ else { assert(false && "Index out of bounds"); return nullptr;
+ } 
+}
+::ast::AstNode const* )" << exp.className << R"(::child(::uint32_t index) const { return const_cast<)" << exp.className  <<  R"(*>(this)->child(index); }
+::uint32_t            )" << exp.className << R"(::num_children() const { return )" << childCount << R"(; }
+            )";
+
+            hpp << "};\n";
+            
+            }
+
         }
 
     } // namespace generators

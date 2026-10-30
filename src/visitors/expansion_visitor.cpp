@@ -56,6 +56,8 @@ namespace zblast {
             specifier.idenRef = node;
             if (!node->HasLabel) {
                 specifier.label = specifier.nodeName;
+            } else {
+                specifier.label = node->LABEL;
             }
             return data;
         }
@@ -63,6 +65,7 @@ namespace zblast {
             MemberSpecifier& specifier = *reinterpret_cast<MemberSpecifier*>(data);
             specifier.kind = node->IsLiteral ? EMember_Literal : EMember_Identifier;
             specifier.nodeName = node->ID;
+            specifier.label = node->ID;
             return VisitChildren(node, data);
         }
         void* ExpansionVisitor::Visit(parsetree::VariantQual* node, void* data) {

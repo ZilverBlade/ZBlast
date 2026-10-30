@@ -22,10 +22,10 @@ public:
 )";
             for (auto& decl : declarations) {
                 hpp << R"(
-    [[maybe_unused]] void* visit(::ast::)" << decl.className << R"(* node, void* data);
+    [[maybe_unused]] virtual void* visit(::ast::)" << decl.className << R"(* node, void* data);
 )";
                 cpp << "void* AstVisitor::visit(::ast::" << decl.className << R"(* node, void* data) {
-    return this->visit_children(static_cast<::ast::AstNode*>(node), data)
+    return this->visit_children(static_cast<::ast::AstNode*>(node), data);
 }
 )";
             }
@@ -37,7 +37,7 @@ protected:
 
             cpp << R"(
 void* AstVisitor::visit_children(::ast::AstNode* node, void* data) {
-    uint32_t count = node->num_child();
+    uint32_t count = node->num_children();
     for (uint32_t i = 0; i < count; ++i) {
         ::ast::AstNode* child = node->child(i);        
         if (child != nullptr) {
@@ -47,8 +47,6 @@ void* AstVisitor::visit_children(::ast::AstNode* node, void* data) {
     return data;
 }
 )";
-
-
         }
 
     } // namespace generators
