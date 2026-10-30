@@ -169,7 +169,8 @@ namespace zblast {
         Ptr node = make_unique<parsetree::ChildList>();
         ETokenType token = parser.Peek();
         // FIRST
-        if (token == EToken_ID) {
+        if (token == EToken_LABEL || token == EToken_ID || token == EToken_L_BRACKET
+            || token == EToken_L_ANGLE) {
             node->isEpsilon = false;
             node->child = Parse_Child(parser);
             node->child_list = Parse_ChildList(parser);
@@ -260,8 +261,8 @@ namespace zblast {
         ETokenType actual = Peek();
         if (actual != expected) {
             char errBuf[128];
-            snprintf(errBuf, sizeof(errBuf), "Expected token %s but got %s!", ETokenType_ToString(expected),
-                     ETokenType_ToString(actual));
+            snprintf(errBuf, sizeof(errBuf), "Expected token %s but got %s! @ %d:%d", ETokenType_ToString(expected),
+                     ETokenType_ToString(actual), CurrLine(), CurrCol());
             throw std::runtime_error(errBuf);
         }
         Token token = *m_Ptr;
