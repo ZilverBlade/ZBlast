@@ -47,8 +47,11 @@ static std::vector<zblast::Token> Tokenize(const char *src) {
         const char *start = cursor;
         zblast::Token tok = zblast::NextToken(cursor);
         zblast::AdvanceLocation(l, c, start, cursor);
-        tok.line = l;
-        tok.col = c;
+        tok.colEnd = c;
+        tok.lineEnd = l;
+        tok.lineStart = l;
+        tok.colStart = tok.colEnd - static_cast<int>(tok.text.length());
+        tokens.push_back(tok);
         if (tok.type == zblast::EToken_EOF) {
             isEnd = true;
         }

@@ -30,10 +30,12 @@ namespace zblast::test {
         int l = 1, c = 1;
         while (true) {
             const char *start = cursor;
-            zblast::Token tok = zblast::NextToken(cursor);
-            zblast::AdvanceLocation(l, c, start, cursor);
-            tok.line = l;
-            tok.col = c;
+            Token tok = NextToken(cursor);
+            AdvanceLocation(l, c, start, cursor);
+            tok.colEnd = c;
+            tok.lineEnd = l;
+            tok.lineStart = l;
+            tok.colStart = tok.colEnd - static_cast<int>(tok.text.length());
             tokens.push_back(tok);
             if (tok.type == EToken_EOF) {
                 break;
@@ -122,7 +124,7 @@ namespace zblast::test {
         ss << file.rdbuf();
         return ss.str();
     }
-} // namespace zblast::test
+} // namespace test
 
 // GoogleTest custom printers so failure messages show human-readable tokens
 namespace zblast {
@@ -131,7 +133,7 @@ namespace zblast {
         if (!tok.text.empty()) {
             *os << ", \"" << tok.text << "\"";
         }
-        *os << " @ " << tok.line << ":" << tok.col;
+        *os << " @ " << tok.lineStart << ":" << tok.colStart;
         *os << ")";
     }
 

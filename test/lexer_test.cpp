@@ -289,7 +289,7 @@ TEST(LexerTest, TestFile05FullAst) {
     auto tokens = Tokenize(content);
 
     for (const auto& tok : tokens) {
-        EXPECT_NE(tok.type, EToken_ERR) << "Unexpected ERR token: " << tok.text << " @ " << tok.line << ":" << tok.col;
+        EXPECT_NE(tok.type, EToken_ERR) << "Unexpected ERR token: " << tok.text << " @ " << tok.lineStart << ":" << tok.colStart;
     }
     EXPECT_EQ(tokens.back().type, EToken_EOF);
 }
@@ -299,7 +299,7 @@ TEST(LexerTest, TestFile06CommentsAndWhitespace) {
     auto tokens = Tokenize(content);
 
     for (const auto& tok : tokens) {
-        EXPECT_NE(tok.type, EToken_ERR) << "Unexpected ERR token: " << tok.text << " @ " << tok.line << ":" << tok.col;
+        EXPECT_NE(tok.type, EToken_ERR) << "Unexpected ERR token: " << tok.text << " @ " << tok.lineStart << ":" << tok.colStart;
     }
     EXPECT_EQ(tokens.back().type, EToken_EOF);
 }

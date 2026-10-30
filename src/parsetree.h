@@ -35,8 +35,8 @@ namespace zblast {
 
             int LineStart = -1;
             int ColumnStart = -1;
-            // int LineEnd = -1;
-            // int ColumnEnd = -1;
+            int LineEnd = -1;
+            int ColumnEnd = -1;
         };
 
         struct NodeRef : ParseNode {

@@ -278,7 +278,7 @@ namespace zblast {
             return -1;
         }
         assert(m_Ptr);
-        return m_Ptr->line;
+        return m_Ptr->lineStart;
     }
 
     int Parser::CurrCol() {
@@ -286,11 +286,13 @@ namespace zblast {
             return -1;
         }
         assert(m_Ptr);
-        return m_Ptr->col;
+        return m_Ptr->colStart;
     }
 
     void Parser::FillAstData(parsetree::ParseNode& node) {
-        node.LineStart = m_Ptr->line;
-        node.ColumnStart = m_Ptr->col;
+        node.LineStart = m_Ptr->lineStart;
+        node.ColumnStart = m_Ptr->colStart;
+        node.LineEnd = m_Ptr->lineEnd;
+        node.ColumnEnd = m_Ptr->colEnd;
     }
 }
