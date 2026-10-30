@@ -1,3 +1,4 @@
+// re2c
 #include "lexer.h"
 
 namespace zblast {
@@ -50,7 +51,8 @@ Token NextToken(const char*& YYCURSOR) {
         ">"  { return {EToken_R_ANGLE, {start, 1}}; }
 
         "abstract" { return {EToken_ABSTRACT, {start, static_cast<size_t>(YYCURSOR - start)}}; }
-        // A label is an identifier immediately followed by a colon (e.g. "Label:")
+        // A label is an identifier immediately followed by a colon e.g. "Label:"
+
         [a-zA-Z_][a-zA-Z0-9_]* ":" {
             YYCURSOR--;
             return {EToken_LABEL, {start, static_cast<size_t>(YYCURSOR - start)}};
@@ -67,5 +69,6 @@ Token NextToken(const char*& YYCURSOR) {
         * { return {EToken_ERR, {start, 1}}; }
     */
 }
+
 } // zblast
 
