@@ -9,17 +9,18 @@ namespace zblast {
         std::tm tm = *std::localtime(&t);   // not thread-safe, see below
 
         auto WriteHeader = [&](std::ostream& stream, const std::string& fileName) {
-            stream << 
-R"(// clang-format off
+            stream << "// " << fileName << R"(
 // ********************************************************************************************************
-// )" << fileName << R"(
 //
 // MIT License
 // 
 // Copyright (c) 2026 ZilverBlade
 //
 // This file was automatically generated on )" << std::put_time(&tm, "%Y-%m-%d @ %H:%M:%S") << R"( using ZBlast
+//
 // ********************************************************************************************************
+//
+// clang-format off
 )";
         };
 
@@ -37,6 +38,8 @@ R"(// clang-format off
 #include <optional>
 #include <variant>
 
+namespace ast {
+
 // Aliases, for easy use
 template <class T>     
 using List = std::vector<T>;
@@ -46,7 +49,6 @@ template <class... Rem>
 using Variant = std::variant<Rem...>;
 using String = std::string;
 
-namespace ast {
 )";
 
         WriteHeader(cpp, fileName + ".cpp");

@@ -1,5 +1,6 @@
 LiteralChild ::= <ID>;
 OptionalChild ::= [Value:<INT_LITERAL>];
 ListChild ::= Stmt*;
-VariantChild ::= LetDecl | ConstDecl;
+VariantChild ::= LetDecl | ConstDecl; // 
+SomeStmt : Stmt ::= VariantChild; // get_VariantChild() 
 ComplexChild ::= Prefix:ID [OptValue:<INT_LITERAL>] Suffix:ID*;
