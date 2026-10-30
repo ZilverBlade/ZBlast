@@ -176,7 +176,7 @@ namespace zblast {
             return node;
         }
         // FOLLOW
-        if (token == EToken_EOF) {
+        if (token == EToken_EOF || token == EToken_SEMICOLON) {
             node->isEpsilon = true;
             return node;
         }

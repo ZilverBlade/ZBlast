@@ -24,12 +24,14 @@ namespace zblast::test {
             return tokens;
         }
 
-        LexerState state;
-        state.line = 1;
-        state.col = 1;
         const char *cursor = src;
+        int l = 1, c = 1;
         while (true) {
-            Token tok = NextToken(cursor, &state);
+            const char *start = cursor;
+            zblast::Token tok = zblast::NextToken(cursor);
+            zblast::AdvanceLocation(l, c, start, cursor);
+            tok.line = l;
+            tok.col = c;
             tokens.push_back(tok);
             if (tok.type == EToken_EOF) {
                 break;

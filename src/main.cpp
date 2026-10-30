@@ -38,11 +38,13 @@ int main() {
 
     bool isEnd = false;
     const char *cursor = src;
-    zblast::LexerState state;
-    state.col = 1;
-    state.line = 1;
+    int l = 1, c = 1;
     while (!isEnd) {
-        zblast::Token tok = zblast::NextToken(cursor, &state);
+        const char *start = cursor;
+        zblast::Token tok = zblast::NextToken(cursor);
+        zblast::AdvanceLocation(l, c, start, cursor);
+        tok.line = l;
+        tok.col = c;
         if (tok.type == zblast::EToken_EOF) {
             isEnd = true;
         }

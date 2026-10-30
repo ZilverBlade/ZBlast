@@ -3,9 +3,16 @@
 #include "token.h"
 
 namespace zblast {
-    struct LexerState {
-        int line;
-        int col;
-    };
-    Token NextToken(const char *&YYCURSOR, LexerState* state);
+    Token NextToken(const char *&YYCURSOR);
+
+    static void AdvanceLocation(int &line, int &col, const char *start, const char *end) {
+        for (const char *p = start; p < end; ++p) {
+            if (*p == '\n') {
+                line++;
+                col = 1;
+            } else {
+                col++;
+            }
+        }
+    }
 } // zblast
