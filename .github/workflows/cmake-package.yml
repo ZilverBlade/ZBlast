@@ -1,0 +1,91 @@
+name: Package
+
+on:
+  push:
+    tags: [ "v*" ]
+
+permissions:
+  contents: write   # needed to create the release
+
+jobs:
+  build:
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            name: linux-x86_64
+          - os: ubuntu-22.04-arm
+            name: linux-aarch64
+          - os: windows-latest
+            name: windows-x86_64
+          - os: macos-latest
+            name: macos-universal
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install re2c (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y re2c
+
+      - name: Install re2c (macOS)
+        if: runner.os == 'macOS'
+        run: brew install re2c
+
+      - name: Install re2c (Windows)
+        if: runner.os == 'Windows'
+        run: choco install re2c -y
+
+      - name: Configure
+        shell: bash
+        run: |
+          EXTRA=""
+          if [ "${{ runner.os }}" = "macOS" ]; then
+            EXTRA="-DCMAKE_OSX_ARCHITECTURES=arm64;x86_64"
+          fi
+          cmake -B build -DCMAKE_BUILD_TYPE=Release -DZBLAST_WERROR=OFF $EXTRA
+
+      - name: Build
+        run: cmake --build build --config Release --parallel 4
+
+      - name: Test
+        working-directory: build
+        run: ctest -C Release --output-on-failure
+
+      - name: Package
+        shell: bash
+        run: |
+          mkdir -p dist/zblast
+          # Windows (MSVC) puts binaries in build/Release/, others in build/
+          cp build/Release/zblast.exe dist/zblast/ 2>/dev/null || cp build/zblast dist/zblast/
+          cp README.md LICENSE dist/zblast/ 2>/dev/null || true
+          cd dist
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            7z a ../zblast-${{ github.ref_name }}-${{ matrix.name }}.zip zblast
+          else
+            tar czf ../zblast-${{ github.ref_name }}-${{ matrix.name }}.tar.gz zblast
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: zblast-${{ matrix.name }}
+          path: |
+            zblast-*.zip
+            zblast-*.tar.gz
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/*
+          generate_release_notes: true
