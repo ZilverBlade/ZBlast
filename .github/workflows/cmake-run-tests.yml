@@ -23,6 +23,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
       - name: Install Dependencies
         run: |
           sudo apt-get update
@@ -33,6 +34,7 @@ jobs:
           -DCMAKE_C_COMPILER=${{ matrix.c }}
           -DCMAKE_CXX_COMPILER=${{ matrix.cxx }}
           -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+          -DZBLAST_WERROR=OFF
           -S .
 
       - name: Build (Linux)

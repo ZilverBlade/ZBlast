@@ -4,6 +4,8 @@ project(ZBlast)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+option(ZBLAST_WERROR "Treat warnings as errors" ON)
+
 find_program(RE2C_EXECUTABLE re2c REQUIRED)
 
 set(LEXER_INPUT "${CMAKE_CURRENT_SOURCE_DIR}/src/lexer.re")
@@ -41,12 +43,14 @@ add_executable(zblast
 )
 target_link_libraries(zblast PRIVATE zblast_core)
 
+if(ZBLAST_WERROR)
 if(MSVC)
     target_compile_options(zblast_core PRIVATE /WX)
     target_compile_options(zblast PRIVATE /WX)
 else()
     target_compile_options(zblast_core PRIVATE -Werror)
     target_compile_options(zblast PRIVATE -Werror)
+endif()
 endif()
 
 enable_testing()
