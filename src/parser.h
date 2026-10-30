@@ -1,10 +1,14 @@
 #pragma once
 #include "lexer.h"
+#include "parsetree.h"
+#include <memory>
 
 namespace zblast {
     class Parser {
     public:
-        void Parse(Token *pTokens);
+        std::unique_ptr<parsetree::Start> Parse(Token *pTokens);
+
+        [[nodiscard]] const parsetree::Start *GetTree() const { return m_Tree.get(); }
 
         [[maybe_unused]] Token Accept(ETokenType expected);
 
@@ -17,5 +21,7 @@ namespace zblast {
     private:
         Token *m_Ptr = nullptr;
         bool m_ReachedEof = false;
+        std::unique_ptr<parsetree::Start> m_Tree;
     };
 } // zblast
+

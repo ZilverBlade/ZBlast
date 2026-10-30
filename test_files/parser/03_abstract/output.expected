@@ -1,0 +1,12 @@
+Start
+  RuleList
+    Rule
+      Node
+        NodeRef: Stmt
+        OptInherit
+    RuleList
+      Rule
+        Node
+          NodeRef: Expr
+          OptInherit
+      RuleList

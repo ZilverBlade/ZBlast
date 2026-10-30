@@ -2,6 +2,7 @@
 
 #include <gtest/gtest.h>
 #include "parser.h"
+#include "parsetree.h"
 #include "test_helpers.h"
 
 using namespace zblast;
@@ -52,6 +53,39 @@ protected:
     void ParseFile(const std::string &filename) {
         std::string content = ReadTestFile(filename);
         ParseText(content.c_str());
+    }
+
+    // Runs a parser test case: reads input.zb, writes output.out with indentation,
+    // and compares against output.expected
+    void RunParserTestCase(const std::string &caseName) {
+        std::filesystem::path testDir = GetTestDir() / "parser" / caseName;
+        std::filesystem::path inputPath = testDir / "input.zb";
+        std::filesystem::path expectedPath = testDir / "output.expected";
+        std::filesystem::path outputPath = testDir / "output.out";
+
+        ASSERT_TRUE(std::filesystem::exists(inputPath)) << "Missing input: " << inputPath;
+        ASSERT_TRUE(std::filesystem::exists(expectedPath)) << "Missing expected: " << expectedPath;
+
+        std::string content = ReadTestFile((std::filesystem::path("parser") / caseName / "input.zb").string());
+        auto tokens = Tokenize(content);
+        ASSERT_FALSE(tokens.empty());
+        ASSERT_EQ(tokens.back().type, EToken_EOF);
+
+        Parser parser;
+        auto tree = parser.Parse(tokens.data());
+        ASSERT_NE(tree, nullptr);
+
+        std::string actualOutput = parsetree::PrintTreeToString(tree.get());
+
+        // Write output.out with indentation
+        std::ofstream outFile(outputPath);
+        ASSERT_TRUE(outFile.is_open()) << "Failed to open output file: " << outputPath;
+        outFile << actualOutput;
+        outFile.close();
+
+        // Compare with output.expected
+        std::string expectedOutput = ReadTestFile((std::filesystem::path("parser") / caseName / "output.expected").string());
+        EXPECT_EQ(actualOutput, expectedOutput);
     }
 };
 
@@ -148,42 +182,42 @@ TEST_F(ParserTestFixture, ParseFullAstExample) {
         });
 }
 
-// --- Test Files Integration ---
+// --- Test Files Integration & Tree Output Verification ---
 
-TEST_F(ParserTestFixture, ParseTestFile01SimpleRule) {
-    EXPECT_NO_THROW({
-        ParseFile("01_simple_rule.zb");
-        });
+TEST_F(ParserTestFixture, ParseTestCase01SimpleRule) {
+    RunParserTestCase("01_simple_rule");
 }
 
-TEST_F(ParserTestFixture, ParseTestFile02Inheritance) {
-    EXPECT_NO_THROW({
-        ParseFile("02_inheritance.zb");
-        });
+TEST_F(ParserTestFixture, ParseTestCase02Inheritance) {
+    RunParserTestCase("02_inheritance");
 }
 
-TEST_F(ParserTestFixture, ParseTestFile03Abstract) {
-    EXPECT_NO_THROW({
-        ParseFile("03_abstract.zb");
-        });
+TEST_F(ParserTestFixture, ParseTestCase03Abstract) {
+    RunParserTestCase("03_abstract");
 }
 
-TEST_F(ParserTestFixture, ParseTestFile04ChildrenTypes) {
-    EXPECT_NO_THROW({
-        ParseFile("04_children_types.zb");
-        });
+TEST_F(ParserTestFixture, ParseTestCase04ChildrenTypes) {
+    RunParserTestCase("04_children_types");
 }
 
-TEST_F(ParserTestFixture, ParseTestFile05FullAst) {
-    EXPECT_NO_THROW({
-        ParseFile("05_full_ast.zb");
-        });
+TEST_F(ParserTestFixture, ParseTestCase05FullAst) {
+    RunParserTestCase("05_full_ast");
 }
 
-TEST_F(ParserTestFixture, ParseTestFile06CommentsAndWhitespace) {
-    EXPECT_NO_THROW({
-        ParseFile("06_comments_and_whitespace.zb");
-        });
+TEST_F(ParserTestFixture, ParseTestCase06CommentsAndWhitespace) {
+    RunParserTestCase("06_comments_and_whitespace");
+}
+
+TEST_F(ParserTestFixture, ParseAllParserSubdirectoryCases) {
+    std::filesystem::path parserDir = GetTestDir() / "parser";
+    int count = 0;
+    for (const auto &entry : std::filesystem::directory_iterator(parserDir)) {
+        if (entry.is_directory()) {
+            RunParserTestCase(entry.path().filename().string());
+            count++;
+        }
+    }
+    EXPECT_GE(count, 6);
 }
 
 // --- Syntax Error Tests ---
@@ -202,6 +236,6 @@ TEST_F(ParserTestFixture, RejectMissingDoubleColonEq) {
 
 TEST_F(ParserTestFixture, RejectInvalidSyntaxFile) {
     EXPECT_ANY_THROW({
-        ParseFile("07_syntax_error.zb");
+        ParseFile("lexer/07_syntax_error.zb");
         });
 }

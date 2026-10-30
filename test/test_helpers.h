@@ -56,19 +56,44 @@ namespace zblast::test {
         return types;
     }
 
+    /// Resolves base directory for test files
+    inline std::filesystem::path GetTestDir() {
+#ifdef TEST_FILES_DIR
+        return std::filesystem::path(TEST_FILES_DIR);
+#else
+        for (const auto &p : { std::filesystem::path("test_files"),
+                               std::filesystem::path("../test_files"),
+                               std::filesystem::path("../../test_files") }) {
+            if (std::filesystem::exists(p)) return p;
+        }
+        return std::filesystem::path("test_files");
+#endif
+    }
+
     /// Resolves path to a file in the test_files directory
     inline std::filesystem::path GetTestFilePath(const std::string &filename) {
-#ifdef TEST_FILES_DIR
-        std::filesystem::path base(TEST_FILES_DIR);
+        std::filesystem::path base = GetTestDir();
         if (std::filesystem::exists(base / filename)) {
             return base / filename;
         }
-#endif
-        // Fallbacks if TEST_FILES_DIR is not defined or relative path differs
+        if (std::filesystem::exists(base / "lexer" / filename)) {
+            return base / "lexer" / filename;
+        }
+        if (std::filesystem::exists(base / "parser" / filename)) {
+            return base / "parser" / filename;
+        }
+
+        // Fallbacks if relative path differs
         std::vector<std::filesystem::path> candidates = {
             std::filesystem::path("test_files") / filename,
+            std::filesystem::path("test_files/lexer") / filename,
+            std::filesystem::path("test_files/parser") / filename,
             std::filesystem::path("../test_files") / filename,
-            std::filesystem::path("../../test_files") / filename
+            std::filesystem::path("../test_files/lexer") / filename,
+            std::filesystem::path("../test_files/parser") / filename,
+            std::filesystem::path("../../test_files") / filename,
+            std::filesystem::path("../../test_files/lexer") / filename,
+            std::filesystem::path("../../test_files/parser") / filename
         };
 
         for (const auto &p: candidates) {

@@ -1,0 +1,69 @@
+Start
+  RuleList
+    Rule
+      Node
+        NodeRef: LiteralChild
+        OptInherit
+      ChildList
+        Child
+          LabeledIden
+            Iden: ID
+          ChildQual
+        ChildList
+    RuleList
+      Rule
+        Node
+          NodeRef: OptionalChild
+          OptInherit
+        ChildList
+          Child
+            LabeledIden: Value
+              Iden: INT_LITERAL
+          ChildList
+      RuleList
+        Rule
+          Node
+            NodeRef: ListChild
+            OptInherit
+          ChildList
+            Child
+              LabeledIden
+                Iden: Stmt
+              ChildQual
+            ChildList
+        RuleList
+          Rule
+            Node
+              NodeRef: VariantChild
+              OptInherit
+            ChildList
+              Child
+                LabeledIden
+                  Iden: LetDecl
+                ChildQual
+                  Child
+                    LabeledIden
+                      Iden: ConstDecl
+                    ChildQual
+              ChildList
+          RuleList
+            Rule
+              Node
+                NodeRef: ComplexChild
+                OptInherit
+              ChildList
+                Child
+                  LabeledIden: Prefix
+                    Iden: ID
+                  ChildQual
+                ChildList
+                  Child
+                    LabeledIden: OptValue
+                      Iden: INT_LITERAL
+                  ChildList
+                    Child
+                      LabeledIden: Suffix
+                        Iden: ID
+                      ChildQual
+                    ChildList
+            RuleList
