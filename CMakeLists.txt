@@ -26,10 +26,18 @@ target_include_directories(zblast_core PUBLIC
     "${CMAKE_CURRENT_BINARY_DIR}"
 )
 
-add_executable(ZBlast
+add_executable(zblast
     src/main.cpp
 )
-target_link_libraries(ZBlast PRIVATE zblast_core)
+target_link_libraries(zblast PRIVATE zblast_core)
+
+if(MSVC)
+    target_compile_options(zblast_core PRIVATE /WX)
+    target_compile_options(zblast PRIVATE /WX)
+else()
+    target_compile_options(zblast_core PRIVATE -Werror)
+    target_compile_options(zblast PRIVATE -Werror)
+endif()
 
 enable_testing()
 
