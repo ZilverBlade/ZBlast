@@ -32,13 +32,18 @@ namespace zblast {
             Ptr<OptInherit> opt_inherit;
         };
 
-        struct NamedNode : ParseNode {
-            bool hasLabel;
-            Str LABEL;
+        struct Child;
+
+        struct Iden : ParseNode {
+            bool isLiteral;
             Str ID;
         };
 
-        struct Child;
+        struct LabeledIden : ParseNode {
+            bool hasLabel;
+            Str LABEL;
+            Ptr<Iden> iden;
+        };
 
         struct ChildQual : ParseNode {
             enum {
@@ -52,13 +57,11 @@ namespace zblast {
 
         struct Child : ParseNode {
             enum {
-                Mode_Literal,
+                Mode_IdentifierWQualifier,
                 Mode_Optional,
-                Mode_Qualifier,
             } Mode;
 
-            Str ID;
-            Ptr<NamedNode> named_node;
+            Ptr<LabeledIden> labeled_iden;
             Ptr<ChildQual> child_qual;
         };
 
@@ -91,25 +94,40 @@ namespace zblast {
     throw std::runtime_error(errBuf);\
 } while (false)
 
-    static Ptr<parsetree::NamedNode> Parse_NamedNode(Parser &parser) {
-        Ptr node = make_unique<parsetree::NamedNode>();
+    static Ptr<parsetree::Iden> Parse_Iden(Parser &parser) {
+        Ptr node = make_unique<parsetree::Iden>();
+        ETokenType token = parser.Peek();
+        // FIRST
+        if (token == EToken_L_ANGLE) {
+            node->isLiteral = true;
+            parser.Accept(EToken_L_ANGLE);
+            node->ID = parser.Accept(EToken_ID).text;
+            parser.Accept(EToken_R_ANGLE);
+            return node;
+        }
+        if (token == EToken_ID) {
+            node->isLiteral = false;
+            node->ID = parser.Accept(EToken_ID).text;
+            return node;
+        }
+
+        PARSER_PANIC();
+    }
+
+    static Ptr<parsetree::LabeledIden> Parse_LabeledIden(Parser &parser) {
+        Ptr node = make_unique<parsetree::LabeledIden>();
         ETokenType token = parser.Peek();
         // FIRST
         if (token == EToken_LABEL) {
             node->hasLabel = true;
             node->LABEL = parser.Accept(EToken_LABEL).text;
             parser.Accept(EToken_COLON);
-            node->ID = parser.Accept(EToken_ID).text;
+            node->iden = Parse_Iden(parser);
+            return node;
+        } else {
+            node->iden = Parse_Iden(parser);
             return node;
         }
-
-        if (token == EToken_ID) {
-            node->hasLabel = false;
-            node->ID = parser.Accept(EToken_ID).text;
-            return node;
-        }
-
-        PARSER_PANIC();
     }
 
     static Ptr<parsetree::Child> Parse_Child(Parser &parser);
@@ -130,7 +148,8 @@ namespace zblast {
             return node;
         }
         // FOLLOW
-        if (token == EToken_R_BRACKET || token == EToken_STAR) {
+        if (token == EToken_L_BRACKET || token == EToken_L_ANGLE || token == EToken_STAR
+            || token == EToken_ID || token == EToken_LABEL || token == EToken_SEMICOLON) {
             node->Mode = parsetree::ChildQual::IsEpsilon;
             return node;
         }
@@ -142,24 +161,17 @@ namespace zblast {
         Ptr node = make_unique<parsetree::Child>();
         ETokenType token = parser.Peek();
         // FIRST
-        if (token == EToken_L_ANGLE) {
-            node->Mode = parsetree::Child::Mode_Literal;
-            parser.Accept(EToken_L_ANGLE);
-            node->ID = parser.Accept(EToken_ID).text;
-            parser.Accept(EToken_R_ANGLE);
+        if (token == EToken_L_ANGLE || token == EToken_ID || token == EToken_LABEL) {
+            node->Mode = parsetree::Child::Mode_IdentifierWQualifier;
+            node->labeled_iden = Parse_LabeledIden(parser);
+            node->child_qual = Parse_ChildQual(parser);
             return node;
         }
         if (token == EToken_L_BRACKET) {
             node->Mode = parsetree::Child::Mode_Optional;
             parser.Accept(EToken_L_BRACKET);
-            node->named_node = Parse_NamedNode(parser);
+            node->labeled_iden = Parse_LabeledIden(parser);
             parser.Accept(EToken_R_BRACKET);
-            return node;
-        }
-        if (token == EToken_LABEL || token == EToken_ID) {
-            node->Mode = parsetree::Child::Mode_Qualifier;
-            node->named_node = Parse_NamedNode(parser);
-            node->child_qual = Parse_ChildQual(parser);
             return node;
         }
 
@@ -178,7 +190,7 @@ namespace zblast {
             return node;
         }
         // FOLLOW
-        if (token == EToken_EOF || token == EToken_SEMICOLON) {
+        if (token == EToken_SEMICOLON) {
             node->isEpsilon = true;
             return node;
         }

@@ -1,2 +1,2 @@
 LetDecl : Stmt ::= <ID>;
-BinaryExpr : Expr : Node ::= Left:Expr <OP> Right:Expr;
+BinaryExpr : Expr ::= Left:Expr <OP> Right:Expr;

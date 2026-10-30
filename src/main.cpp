@@ -18,11 +18,12 @@
  child_list -> child child_list
  child_list -> \epsilon
 
- named_node -> LABEL ":" ID
- named_node -> ID
- child -> "<" ID ">"            # Literal
- child -> "[" named_node "]"    # Optional
- child -> named_node child_qual
+ labeled_iden -> LABEL ":" iden
+ labeled_iden -> iden
+ iden -> ID
+ iden -> "<" ID ">"
+ child -> "[" labeled_iden "]"    # Optional
+ child -> labeled_iden child_qual # Literal/Identifier
  child_qual -> "*"              # List
  child_qual -> "|" child        # Variant
  child_qual -> \epsilon
