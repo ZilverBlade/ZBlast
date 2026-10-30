@@ -3,5 +3,9 @@
 #include "token.h"
 
 namespace zblast {
-    Token NextToken(const char *&YYCURSOR);
+    struct LexerState {
+        int line;
+        int col;
+    };
+    Token NextToken(const char *&YYCURSOR, LexerState* state);
 } // zblast

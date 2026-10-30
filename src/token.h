@@ -36,5 +36,7 @@ namespace zblast {
     struct Token {
         ETokenType type;
         std::string_view text;
+        int line;
+        int col;
     };
 } // zblast

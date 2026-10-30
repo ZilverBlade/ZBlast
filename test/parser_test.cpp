@@ -42,9 +42,8 @@ protected:
         ASSERT_FALSE(tokens.empty());
         ASSERT_EQ(tokens.back().type, EToken_EOF);
 
-        // TODO: Uncomment once Parser::Parse(Token* pTokens) is implemented in src/parser.cpp:
-        // Parser parser;
-        // parser.Parse(tokens.data());
+        Parser parser;
+        parser.Parse(tokens.data());
     }
 
     void ParseFile(const std::string& filename) {

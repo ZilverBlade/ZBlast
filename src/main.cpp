@@ -8,9 +8,10 @@
  rule_list -> \epsilon
 
  rule -> node "::=" child_list ";"
+ node -> node_ref opt_inherit
 
- node -> ID opt_inherit
- opt_inherit -> ":" node
+ node_ref -> ID
+ opt_inherit -> ":" node_ref
  opt_inherit -> \epsilon
 
  child_list -> child child_list
@@ -23,7 +24,7 @@
  child -> named_node child_qual
  child_qual -> "*"              # List
  child_qual -> "|" child        # Variant
- child -> named_node
+ child_qual -> \epsilon
 
 */
 
@@ -37,8 +38,11 @@ int main() {
 
     bool isEnd = false;
     const char *cursor = src;
+    zblast::LexerState state;
+    state.col = 1;
+    state.line = 1;
     while (!isEnd) {
-        zblast::Token tok = zblast::NextToken(cursor);
+        zblast::Token tok = zblast::NextToken(cursor, &state);
         if (tok.type == zblast::EToken_EOF) {
             isEnd = true;
         }
@@ -48,8 +52,7 @@ int main() {
             std::cout << " \"" << tok.text << "\"";
         }
         if (tok.type == zblast::EToken_ERR) {
-            size_t start = std::distance(src, tok.text.data());
-            std::cout << " @ " << start << ":" << (start + tok.text.size());
+            std::cout << " @ " << tok.line << ":" << tok.col;
         }
         std::cout << "\n";
     }
