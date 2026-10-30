@@ -5,6 +5,8 @@ namespace zblast {
     namespace generators {
         void AstCodeGen::Generate(parsetree::Start* program, std::ostream& hpp, std::ostream& cpp) {
             hpp << R"(
+class AstVisitor; // zblast -v
+
 class AstNode {
 public:
     struct ChildList {
@@ -12,17 +14,17 @@ public:
             Iterator(AstNode* node, uint32_t index);
             ~Iterator();
 
-            Iterator operator++ (int);
-            Iterator& operator++();
+            [[maybe_unused]] Iterator operator++ (int);
+            [[maybe_unused]] Iterator& operator++();
 
-            Iterator operator-- (int);
-            Iterator& operator--();
+            [[maybe_unused]] Iterator operator-- (int);
+            [[maybe_unused]] Iterator& operator--();
 
-            bool operator== (const Iterator& other);
-            bool operator!= (const Iterator& other);
+            [[nodiscard]] bool operator== (const Iterator& other);
+            [[nodiscard]] bool operator!= (const Iterator& other);
 
-            AstNode* operator*();
-            AstNode const* operator*() const;
+            [[nodiscard]] AstNode* operator*();
+            [[nodiscard]] AstNode const* operator*() const;
             
         private:
             AstNode* m_Node;
@@ -33,11 +35,11 @@ public:
         ChildList(AstNode* node);
         ~ChildList();
 
-        Iterator start() const;
-        Iterator end() const;
+        [[nodiscard]] Iterator start() const;
+        [[nodiscard]] Iterator end() const;
 
-        AstNode* operator[](size_t index);
-        AstNode const* operator[](size_t index) const;
+        [[nodiscard]] AstNode* operator[](::size_t index);
+        [[nodiscard]] AstNode const* operator[](::size_t index) const;
 
     private:
         AstNode* m_Node;
@@ -49,20 +51,24 @@ public:
 
     // Ast properties
     
-    ::uint32_t line_start() const;
-    ::uint32_t line_end() const;
-    ::uint32_t column_start() const;
-    ::uint32_t column_end() const;
+    [[nodiscard]] ::uint32_t line_start() const;
+    [[nodiscard]] ::uint32_t line_end() const;
+    [[nodiscard]] ::uint32_t column_start() const;
+    [[nodiscard]] ::uint32_t column_end() const;
     
-    ::ast::AstNode*       parent();
-    ::ast::AstNode const* parent() const;
-    ChildList             children() const;
+    [[nodiscard]] ::ast::AstNode*       parent();
+    [[nodiscard]] ::ast::AstNode const* parent() const;
+    [[nodiscard]] ChildList             children() const;
 
     // Derived properties
-    virtual ::ast::AstNode*       child(uint32_t index) = 0;
-    virtual ::ast::AstNode const* child(uint32_t index) const = 0;
-    virtual ::uint32_t            num_children() const = 0;
+    [[nodiscard]] virtual ::ast::AstNode*       child(::uint32_t index) = 0;
+    [[nodiscard]] virtual ::ast::AstNode const* child(::uint32_t index) const = 0;
+    [[nodiscard]] virtual ::uint32_t            num_children() const = 0;
 
+    // Visitor
+
+    [[maybe_unused]] virtual void* accept(AstVisitor* visitor, void* data);
+    
 protected:
 
     ::ast::AstNode* m_Parent      = nullptr;
@@ -146,6 +152,11 @@ AstNode::~AstNode() {}
 ::ast::AstNode*           AstNode::parent()         { return this->m_Parent; }
 ::ast::AstNode const*     AstNode::parent() const   { return this->m_Parent; }
 ::ast::AstNode::ChildList AstNode::children() const { return ChildList(const_cast<::ast::AstNode*>(this)); }
+
+[[maybe_unused]] void* AstNode::accept(AstVisitor* visitor, void* data) {
+    assert(false && "Visitors are not generated!");
+    return nullptr;
+}
 )";
         }
 

@@ -70,7 +70,7 @@ namespace ast {
         hpp << "\n#endif // _ZBLAST_GEN_" << fileName << "_" << "\n";
         hpp << "// clang-format on\n";
 
-        cpp << "\n}\n // namespace ast";
+        cpp << "\n} // namespace ast\n";
         cpp << "// clang-format on\n";
     }
 } // namespace zblast
