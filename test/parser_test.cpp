@@ -24,6 +24,16 @@ using namespace zblast::test;
  *   ./zblast_tests --gtest_also_run_tests
  */
 
+static std::string& NormalizeLineEndings(std::string& string) {
+    for (int i = 0; i < string.size(); ++i) {
+        if (string[i] == '\r') {
+            string.erase(i);
+            --i;
+        }
+    }
+    return string;
+}
+
 class ParserTestFixture : public ::testing::Test {
 protected:
     // Helper to tokenize source text and feed it to the parser
@@ -71,7 +81,7 @@ protected:
 
         // Compare with output.expected
         std::string expectedOutput = ReadTestFile((std::filesystem::path("parser") / caseName / "output.expected").string());
-        EXPECT_EQ(actualOutput, expectedOutput);
+        EXPECT_EQ(NormalizeLineEndings(actualOutput), NormalizeLineEndings(expectedOutput));
     }
 };
 
