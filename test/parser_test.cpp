@@ -27,7 +27,7 @@ using namespace zblast::test;
 static std::string& NormalizeLineEndings(std::string& string) {
     for (int i = 0; i < string.size(); ++i) {
         if (string[i] == '\r') {
-            string.erase(i);
+            string.erase(i, 1);
             --i;
         }
     }
