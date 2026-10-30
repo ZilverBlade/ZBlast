@@ -2,7 +2,7 @@
 
 namespace zblast {
     namespace parsetree {
-        struct ParseNode;
+        struct AstNode;
         struct NodeRef;
         struct OptInherit;
         struct Node;
@@ -34,6 +34,6 @@ namespace zblast {
         [[maybe_unused]] virtual void* Visit(parsetree::Start* node, void* data);
 
     protected:
-        [[maybe_unused]] virtual void* VisitChildren(parsetree::ParseNode* node, void* data);
+        [[maybe_unused]] virtual void* VisitChildren(parsetree::AstNode* node, void* data);
     };
 } // namespace zblast

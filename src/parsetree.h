@@ -20,12 +20,12 @@ namespace zblast {
         template<typename T>
         using List = std::vector<T>;
 
-        struct ParseNode {
-            virtual ~ParseNode() = default;
+        struct AstNode {
+            virtual ~AstNode() = default;
 
             virtual const char* NodeName() const = 0;
 
-            virtual List<ParseNode*> Children() const { return {}; }
+            virtual List<AstNode*> Children() const { return {}; }
             virtual List<Str> Values() const { return {}; }
             [[maybe_unused]] virtual void* Accept(Visitor* visitor, void* data) {
                 char errBuf[128];
@@ -39,32 +39,32 @@ namespace zblast {
             int ColumnEnd = -1;
         };
 
-        struct NodeRef : ParseNode {
+        struct NodeRef : AstNode {
             Str ID;
             const char* NodeName() const override { return "NodeRef"; }
             List<Str> Values() const override { return { ID }; }
             void* Accept(Visitor* visitor, void* data) override { return visitor->Visit(this, data); }
         };
 
-        struct OptInherit : ParseNode {
+        struct OptInherit : AstNode {
             bool IsEpsilon = false;
             Ptr<NodeRef> node_ref;
             const char* NodeName() const override { return "OptInherit"; }
-            List<ParseNode*> Children() const override { return { node_ref.get() }; }
+            List<AstNode*> Children() const override { return { node_ref.get() }; }
             void* Accept(Visitor* visitor, void* data) override { return visitor->Visit(this, data); }
         };
 
-        struct Node : ParseNode {
+        struct Node : AstNode {
             Ptr<NodeRef> node_ref;
             Ptr<OptInherit> opt_inherit;
             const char* NodeName() const override { return "Node"; }
-            List<ParseNode*> Children() const override { return { node_ref.get(), opt_inherit.get() }; }
+            List<AstNode*> Children() const override { return { node_ref.get(), opt_inherit.get() }; }
             void* Accept(Visitor* visitor, void* data) override { return visitor->Visit(this, data); }
         };
 
         struct Child;
 
-        struct Iden : ParseNode {
+        struct Iden : AstNode {
             bool IsLiteral = false;
             Str ID;
             const char* NodeName() const override { return "Iden"; }
@@ -72,27 +72,27 @@ namespace zblast {
             void* Accept(Visitor* visitor, void* data) override { return visitor->Visit(this, data); }
         };
 
-        struct LabeledIden : ParseNode {
+        struct LabeledIden : AstNode {
             bool HasLabel = false;
             Str LABEL;
             Ptr<Iden> iden;
             const char* NodeName() const override { return "LabeledIden"; }
-            List<ParseNode*> Children() const override { return { iden.get() }; }
+            List<AstNode*> Children() const override { return { iden.get() }; }
             List<Str> Values() const override { return { LABEL }; }
             void* Accept(Visitor* visitor, void* data) override { return visitor->Visit(this, data); }
         };
 
-        struct VariantQual : ParseNode {
+        struct VariantQual : AstNode {
             bool IsEpsilon;
             Ptr<LabeledIden> labeled_iden;
             Ptr<VariantQual> variant_qual;
             const char* NodeName() const override { return "VariantQual"; }
 
-            List<ParseNode*> Children() const override { return { labeled_iden.get(), variant_qual.get() }; }
+            List<AstNode*> Children() const override { return { labeled_iden.get(), variant_qual.get() }; }
             void* Accept(Visitor* visitor, void* data) override { return visitor->Visit(this, data); }
         };
 
-        struct ChildQual : ParseNode {
+        struct ChildQual : AstNode {
             enum {
                 Mode_List,
                 Mode_Variant,
@@ -102,11 +102,11 @@ namespace zblast {
             Ptr<VariantQual> variant_qual;
             const char* NodeName() const override { return "ChildQual"; }
 
-            List<ParseNode*> Children() const override { return { variant_qual.get() }; }
+            List<AstNode*> Children() const override { return { variant_qual.get() }; }
             void* Accept(Visitor* visitor, void* data) override { return visitor->Visit(this, data); }
         };
 
-        struct Child : ParseNode {
+        struct Child : AstNode {
             enum {
                 Mode_IdentifierWQualifier,
                 Mode_Optional,
@@ -116,57 +116,57 @@ namespace zblast {
             Ptr<ChildQual> child_qual;
 
             const char* NodeName() const override { return "Child"; }
-            List<ParseNode*> Children() const override { return { labeled_iden.get(), child_qual.get() }; }
+            List<AstNode*> Children() const override { return { labeled_iden.get(), child_qual.get() }; }
             void* Accept(Visitor* visitor, void* data) override { return visitor->Visit(this, data); }
         };
 
-        struct ChildList : ParseNode {
+        struct ChildList : AstNode {
             bool IsEpsilon = false;
             Ptr<Child> child;
             Ptr<ChildList> child_list;
 
             const char* NodeName() const override { return "ChildList"; }
-            List<ParseNode*> Children() const override { return { child.get(), child_list.get() }; }
+            List<AstNode*> Children() const override { return { child.get(), child_list.get() }; }
             void* Accept(Visitor* visitor, void* data) override { return visitor->Visit(this, data); }
         };
 
 
-        struct OptExpansion : ParseNode {
+        struct OptExpansion : AstNode {
             bool IsEpsilon = false;
             Ptr<ChildList> child_list;
             const char* NodeName() const override { return "OptExpansion"; }
-            List<ParseNode*> Children() const override { return { child_list.get() }; }
+            List<AstNode*> Children() const override { return { child_list.get() }; }
             void* Accept(Visitor* visitor, void* data) override { return visitor->Visit(this, data); }
         };
 
-        struct Rule : ParseNode {
+        struct Rule : AstNode {
             bool IsAbstract = false;
             Ptr<Node> node;
             Ptr<OptExpansion> opt_expansion;
             const char* NodeName() const override { return "Rule"; }
-            List<ParseNode*> Children() const override { return { node.get(), opt_expansion.get() }; }
+            List<AstNode*> Children() const override { return { node.get(), opt_expansion.get() }; }
             void* Accept(Visitor* visitor, void* data) override { return visitor->Visit(this, data); }
         };
 
-        struct RuleList : ParseNode {
+        struct RuleList : AstNode {
             bool IsEpsilon = false;
             Ptr<Rule> rule;
             Ptr<RuleList> rule_list;
 
             const char* NodeName() const override { return "RuleList"; }
-            List<ParseNode*> Children() const override { return { rule.get(), rule_list.get() }; }
+            List<AstNode*> Children() const override { return { rule.get(), rule_list.get() }; }
             void* Accept(Visitor* visitor, void* data) override { return visitor->Visit(this, data); }
         };
 
-        struct Start : ParseNode {
+        struct Start : AstNode {
             Ptr<RuleList> rule_list;
 
             const char* NodeName() const override { return "Start"; }
-            List<ParseNode*> Children() const override { return { rule_list.get() }; }
+            List<AstNode*> Children() const override { return { rule_list.get() }; }
             void* Accept(Visitor* visitor, void* data) override { return visitor->Visit(this, data); }
         };
 
-        inline void PrintTree(const ParseNode* node, std::ostream& out, int depth = 0) {
+        inline void PrintTree(const AstNode* node, std::ostream& out, int depth = 0) {
             if (!node) return;
             for (int i = 0; i < depth; ++i) {
                 out << "  ";
@@ -194,13 +194,13 @@ namespace zblast {
             }
         }
 
-        inline std::string PrintTreeToString(const ParseNode* node) {
+        inline std::string PrintTreeToString(const AstNode* node) {
             std::ostringstream ss;
             PrintTree(node, ss);
             return ss.str();
         }
 
-        inline void WriteTreeToFile(const ParseNode* node, const std::string& filepath) {
+        inline void WriteTreeToFile(const AstNode* node, const std::string& filepath) {
             std::ofstream out(filepath);
             PrintTree(node, out);
         }

@@ -29,7 +29,7 @@ namespace zblast {
             node->Accept(&m_ExpVisitor, nullptr);
 
             std::unordered_map<std::string, const Declaration *> foundDeclarations; // [name, decl]
-            std::unordered_map<std::string, std::vector<parsetree::NodeRef *>> referencedDeclarations; // [name, referenced by]
+            std::unordered_map<std::string, std::vector<parsetree::AstNode *>> referencedDeclarations; // [name, referenced by]
             // Check for duplicate rules
             for (auto &decl: m_DeclVisitor.GetDeclarations()) {
                 if (auto it = foundDeclarations.find(decl.className); it == foundDeclarations.end()) {

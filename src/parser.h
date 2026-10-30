@@ -18,7 +18,7 @@ namespace zblast {
 
         [[nodiscard]] int CurrCol();
         
-        void FillAstData(parsetree::ParseNode& node);
+        void FillAstData(parsetree::AstNode& node);
 
     private:
         Token *m_Ptr = nullptr;

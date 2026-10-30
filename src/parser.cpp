@@ -303,7 +303,7 @@ namespace zblast {
         return m_Ptr->colStart;
     }
 
-    void Parser::FillAstData(parsetree::ParseNode& node) {
+    void Parser::FillAstData(parsetree::AstNode& node) {
         node.LineStart = m_Ptr->lineStart;
         node.ColumnStart = m_Ptr->colStart;
         node.LineEnd = m_Ptr->lineEnd;
