@@ -10,10 +10,12 @@ namespace zblast {
             hpp << "class AstNode;\n";
             for (auto& decl : declarations) {
                 hpp << "class " << decl.className << ";\n";
-                cpp << R"([[maybe_unused]] void* )" << decl.className <<  R"(::accept(AstVisitor* visitor, void* data) {
+                if (!decl.isAbstract) {
+                    cpp << R"([[maybe_unused]] void* )" << decl.className <<  R"(::accept(AstVisitor* visitor, void* data) {
     return visitor->visit(this, data);
 }
 )";
+                }
             }
 
             hpp << R"(
@@ -21,13 +23,15 @@ class AstVisitor {
 public:
 )";
             for (auto& decl : declarations) {
-                hpp << R"(
+                if (!decl.isAbstract) {
+                    hpp << R"(
     [[maybe_unused]] virtual void* visit(::ast::)" << decl.className << R"(* node, void* data);
 )";
-                cpp << "void* AstVisitor::visit(::ast::" << decl.className << R"(* node, void* data) {
+                    cpp << "void* AstVisitor::visit(::ast::" << decl.className << R"(* node, void* data) {
     return this->visit_children(static_cast<::ast::AstNode*>(node), data);
 }
 )";
+                }
             }
             hpp << R"(
 protected:
@@ -49,5 +53,8 @@ void* AstVisitor::visit_children(::ast::AstNode* node, void* data) {
 )";
         }
 
+        std::string VisitorCodeGen::AdditionalIncludes(const std::string &fileName) {
+            return "#include \"" + fileName.substr(0, fileName.length() - sizeof("_visitor") + 1) + "_ast.hpp\"\n";
+        }
     } // namespace generators
 } // namespace zblast

@@ -24,6 +24,7 @@ namespace zblast {
         void Generate(parsetree::Start* node, std::ostream& hpp, std::ostream& cpp, const std::string& fileName);
 
     protected:
+        virtual std::string AdditionalIncludes(const std::string& fileName);
         virtual void Generate(parsetree::Start* node, std::ostream& hpp, std::ostream& cpp) = 0;
 
     };

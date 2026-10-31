@@ -34,8 +34,8 @@ namespace zblast {
 
 // Standard C++ types
 #include <string>
-#include <vector>
 #include <optional>
+#include <vector>
 #include <variant>
 
 namespace ast {
@@ -45,19 +45,21 @@ template <class T>
 using List = std::vector<T>;
 template <class T>     
 using Opt = std::optional<T>;
+using std::nullopt;
 template <class... Rem>
 using Variant = std::variant<Rem...>;
 using String = std::string;
-
 )";
 
         WriteHeader(cpp, fileName + ".cpp");
-        cpp << "#include \"" << fileName << ".hpp\"" << "\n\n"; 
+        cpp << "#include \"" << fileName << ".hpp\"" << "\n\n";
+        cpp << AdditionalIncludes(fileName);
         cpp << R"(
 // Standard C utilities
 #include <cassert>
 
 // Standard C++ utilities
+#include <functional>
 #include <stdexcept>
 
 namespace ast {
@@ -73,4 +75,6 @@ namespace ast {
         cpp << "\n} // namespace ast\n";
         cpp << "// clang-format on\n";
     }
+
+    std::string Generator::AdditionalIncludes(const std::string& fileName) { return ""; }
 } // namespace zblast

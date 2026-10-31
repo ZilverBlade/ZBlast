@@ -1,18 +1,23 @@
 abstract Stmt;
 
 abstract Expr;
-// Arithmetic
-BinaryExpr  : Expr ::= Lhs:Expr Rhs:Expr; 
-UnaryExpr   : Expr ::= Expr; 
 
 IdDecl ::= <ID>;
+IdUse  : Expr ::= <ID>;
+
+// Arithmetic
+BinaryExpr  : Expr ::= Lhs:Expr Rhs:Expr;
+UnaryExpr   : Expr ::= Expr;
 
 VarStmt     : Stmt ::= Variable:IdDecl;
-BlockStmt   : Stmt ::= Stmt*; 
+BlockStmt   : Stmt ::= Stmt*;
 
-IfStmt      : Stmt ::= Cond:Expr Then:Stmt [Else:Stmt]; 
+IfStmt      : Stmt ::= Cond:Expr Then:Stmt [Else:Stmt];
 
 abstract Type;
-IntType : Type;
+IntType     : Type;
+UnknownType : Type;
 
-FuncDecl ::= FuncName:IdDecl [ReturnType:Type] Arg:IdDecl* Line:Stmt*; 
+FuncDecl ::= FuncName:IdDecl [ReturnType:Type] Arg:IdDecl* Line:Stmt*;
+
+Program ::= FuncDecl*;
