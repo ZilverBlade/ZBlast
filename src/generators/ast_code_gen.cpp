@@ -5,6 +5,13 @@
 namespace zblast {
     namespace generators {
         void AstCodeGen::Generate(parsetree::Start* program, std::ostream& hpp, std::ostream& cpp) {
+            // forward declare everything
+            auto expansions = visitors::ExpansionVisitor().CollectExpansions(program);
+
+            for (auto& exp : expansions) {
+                hpp << "class " << exp.className << ";\n";
+            }
+
             // biiig header
             hpp << R"(
 class AstVisitor; // zblast -v
@@ -201,7 +208,6 @@ void AstNode::detail_set_parent(AstNode* child, AstNode* parent) { child->m_Pare
 )";
 
             // Now actually generate the files
-            auto expansions = visitors::ExpansionVisitor().CollectExpansions(program);
 
             for (auto& exp : expansions) {
                 std::string baseClass;

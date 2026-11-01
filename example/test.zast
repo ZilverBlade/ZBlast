@@ -2,7 +2,6 @@ abstract Stmt;
 
 abstract Expr;
 
-IdDecl ::= <ID>;
 IdUse  : Expr ::= <ID>;
 
 // Arithmetic
@@ -19,5 +18,7 @@ IntType     : Type;
 UnknownType : Type;
 
 FuncDecl ::= FuncName:IdDecl [ReturnType:Type] Arg:IdDecl* Line:Stmt*;
+
+IdDecl ::= <ID>; 
 
 Program ::= FuncDecl*;
