@@ -44,14 +44,14 @@ public:
         ChildList(AstNode* node);
         ~ChildList();
 
-        [[nodiscard]] Iterator begin() const;
-        [[nodiscard]] Iterator end() const;
+        [[nodiscard]] ZBLAST_API Iterator begin() const;
+        [[nodiscard]] ZBLAST_API Iterator end() const;
 
-        [[nodiscard]] AstNode* operator[](::uint32_t index);
-        [[nodiscard]] AstNode const* operator[](::uint32_t index) const;
+        [[nodiscard]] ZBLAST_API AstNode* operator[](::uint32_t index);
+        [[nodiscard]] ZBLAST_API AstNode const* operator[](::uint32_t index) const;
 
-        [[nodiscard]] uint32_t size() const;
-        [[nodiscard]] bool empty() const;
+        [[nodiscard]] ZBLAST_API uint32_t size() const;
+        [[nodiscard]] ZBLAST_API bool empty() const;
 
     private:
         AstNode* m_Node;
@@ -60,8 +60,8 @@ public:
 
     // Constructors
 
-    AstNode();
-    virtual ~AstNode();
+    ZBLAST_API AstNode();
+    ZBLAST_API virtual ~AstNode();
 
     AstNode(const AstNode&)             = delete;
     AstNode(AstNode&&)                  = delete;
@@ -70,22 +70,22 @@ public:
 
     // Ast properties
 
-    [[nodiscard]] ::uint32_t line_start() const;
-    [[nodiscard]] ::uint32_t line_end() const;
-    [[nodiscard]] ::uint32_t column_start() const;
-    [[nodiscard]] ::uint32_t column_end() const;
+    [[nodiscard]] ZBLAST_API ::uint32_t line_start() const;
+    [[nodiscard]] ZBLAST_API ::uint32_t line_end() const;
+    [[nodiscard]] ZBLAST_API ::uint32_t column_start() const;
+    [[nodiscard]] ZBLAST_API ::uint32_t column_end() const;
 
-    [[nodiscard]] ::ast::AstNode*       parent();
-    [[nodiscard]] ::ast::AstNode const* parent() const;
-    [[nodiscard]] bool                  has_parent() const;
-    [[nodiscard]] ChildList             children() const;
+    [[nodiscard]] ZBLAST_API ::ast::AstNode*       parent();
+    [[nodiscard]] ZBLAST_API ::ast::AstNode const* parent() const;
+    [[nodiscard]] ZBLAST_API bool                  has_parent() const;
+    [[nodiscard]] ZBLAST_API ChildList             children() const;
 
     template <class T, std::enable_if_t<std::is_base_of_v<AstNode, T>, bool> = true>
-    [[nodiscard]] bool      is() const;
+    [[nodiscard]] ZBLAST_API bool      is() const;
     template <class T, std::enable_if_t<std::is_base_of_v<AstNode, T>, bool> = true>
-    [[nodiscard]] T*        as();
+    [[nodiscard]] ZBLAST_API T*        as();
     template <class T, std::enable_if_t<std::is_base_of_v<AstNode, T>, bool> = true>
-    [[nodiscard]] T const*  as() const;
+    [[nodiscard]] ZBLAST_API T const*  as() const;
 
     // Derived properties
     [[nodiscard]] virtual ::ast::AstNode*       child(::uint32_t index) = 0;
@@ -97,12 +97,16 @@ public:
 
     // Visitor
 
-    [[maybe_unused]] virtual void* accept(AstVisitor* visitor, void* data);
+    [[maybe_unused]] ZBLAST_API virtual void* accept(AstVisitor* visitor, void* data);
 
 protected:
-    static void detail_set_parent(AstNode* child, AstNode* parent);
+    // Cannot be placed in AstNode constructor, due to in-order construction
+    void detail_set_parent();
+    // Cannot be placed in AstNode destructor, due to reverse-order destructor
+    void detail_destroy_children();
     [[nodiscard]] virtual bool detail_id_search(int64_t typeId) const;
 
+private:
     ::ast::AstNode* m_Parent      = nullptr;
     ::uint32_t      m_LineStart   = 0;
     ::uint32_t      m_LineEnd     = 0;
@@ -198,13 +202,28 @@ template <>  bool           AstNode::is<AstNode>() const { return true; }
 template <>  AstNode*       AstNode::as<AstNode>()       { return this; }
 template <>  AstNode const* AstNode::as<AstNode>() const { return this; }
 
-[[maybe_unused]] void* AstNode::accept(AstVisitor* visitor, void* data) {
+void* AstNode::accept(AstVisitor* visitor, void* data) {
     assert(false && "Visitors are not generated for this type!");
     return nullptr;
 }
 
-void AstNode::detail_set_parent(AstNode* child, AstNode* parent) { child->m_Parent = parent; }
-[[nodiscard]] bool AstNode::detail_id_search(int64_t typeId) const { return false; }
+void AstNode::detail_set_parent() {
+    ChildList clist = this->children();
+    for (auto it = clist.begin(); it != clist.end(); ++it) {
+        AstNode* c = *it;
+        assert(c->m_Parent == nullptr && "Child already has a parent set! Do not assign children to multiple parents!");
+        (*it)->m_Parent = this;
+    }
+}
+
+void AstNode::detail_destroy_children() {
+    ChildList clist = this->children();
+    for (auto it = clist.begin(); it != clist.end(); ++it) {
+        delete *it;
+    }
+}
+
+bool AstNode::detail_id_search(int64_t typeId) const { return false; }
 )";
 
             // Now actually generate the files
@@ -230,11 +249,11 @@ void AstNode::detail_set_parent(AstNode* child, AstNode* parent) { child->m_Pare
                 hpp << R"(
 class )" << exp.className << R"( : public ::ast::)" << baseClass << R"( {
 public:
-    static const int64_t TYPE_ID;
+    ZBLAST_API static const int64_t TYPE_ID;
 
-    [[nodiscard]]    ::ast::AstNode*       child(::uint32_t index) override;
-    [[nodiscard]]    ::ast::AstNode const* child(::uint32_t index) const override;
-    [[nodiscard]]    ::uint32_t            num_children() const override;
+    [[nodiscard]]    ZBLAST_API ::ast::AstNode*       child(::uint32_t index) override;
+    [[nodiscard]]    ZBLAST_API ::ast::AstNode const* child(::uint32_t index) const override;
+    [[nodiscard]]    ZBLAST_API ::uint32_t            num_children() const override;
 )";
                 if (!exp.rule->IsAbstract) {
                     hpp << R"(
@@ -266,7 +285,7 @@ bool )" << exp.className << R"(::detail_id_search(int64_t typeId) const {
                         specifier0 = "String /*" + mem.specifiers[0].nodeName + "*/";
                     }
                     if (mem.kind == visitors::EExpansion_Normal) {
-                        hpp << "public: [[nodiscard]] " << specifier0 << " get_" << mem.specifiers[0].label << "();\n";
+                        hpp << "public: [[nodiscard]] ZBLAST_API " << specifier0 << " get_" << mem.specifiers[0].label << "();\n";
                         hpp << "private: " << specifier0 << " " << member0 << ";\n";
                         cpp << specifier0 << " " << exp.className << "::get_" << mem.specifiers[0].label << "() { "
                             "return " << member0 << "; }\n";
@@ -276,8 +295,8 @@ bool )" << exp.className << R"(::detail_id_search(int64_t typeId) const {
                         }
                         constructor.emplace_back(specifier0, member0);
                     } else if (mem.kind == visitors::EExpansion_Opt) {
-                        hpp << "public: [[nodiscard]] bool has_" << mem.specifiers[0].label << "();\n";
-                        hpp << "public: [[nodiscard]] " << specifier0 << " get_" << mem.specifiers[0].label << "();\n";
+                        hpp << "public: [[nodiscard]] ZBLAST_API bool has_" << mem.specifiers[0].label << "();\n";
+                        hpp << "public: [[nodiscard]] ZBLAST_API " << specifier0 << " get_" << mem.specifiers[0].label << "();\n";
                         hpp << "private: Opt<" << specifier0 << "> " << member0 << ";\n";
                         cpp << "bool " << exp.className << "::has_" << mem.specifiers[0].label << "() { return this->" << member0 << ".has_value(); }\n";
                         cpp << specifier0 << " " << exp.className << "::get_" << mem.specifiers[0].label << "() { "
@@ -289,9 +308,9 @@ bool )" << exp.className << R"(::detail_id_search(int64_t typeId) const {
                         }
                         constructor.emplace_back("Opt<" + specifier0 + ">", member0);
                     } else if (mem.kind == visitors::EExpansion_List) {
-                        hpp << "public: [[nodiscard]] uint32_t num_" << mem.specifiers[0].label << "s();\n";
-                        hpp << "public: [[nodiscard]] List<" << specifier0 << "> const& get_" << mem.specifiers[0].label << "s();\n";
-                        hpp << "public: [[nodiscard]] " << specifier0 << " get_" << mem.specifiers[0].label << "(uint32_t index);\n";
+                        hpp << "public: [[nodiscard]] ZBLAST_API uint32_t num_" << mem.specifiers[0].label << "s();\n";
+                        hpp << "public: [[nodiscard]] ZBLAST_API List<" << specifier0 << "> const& get_" << mem.specifiers[0].label << "s();\n";
+                        hpp << "public: [[nodiscard]] ZBLAST_API " << specifier0 << " get_" << mem.specifiers[0].label << "(uint32_t index);\n";
                         hpp << "private: List<" << specifier0 << "> " << member0 << ";\n";
                         cpp << "uint32_t " << exp.className << "::num_" << mem.specifiers[0].label << "s() { return static_cast<uint32_t>(this->" << member0 << ".size()); }\n";
                         cpp << "List<" << specifier0 << "> const& " << exp.className << "::get_" << mem.specifiers[0].label << "s() { return this->" << member0 << "; }\n";
@@ -334,8 +353,8 @@ bool )" << exp.className << R"(::detail_id_search(int64_t typeId) const {
                 } else {
                     hpp << "public: \n";
                 }
-                hpp << "    " << exp.className << "(" << constructorList << ");\n";
-                hpp << "    ~" << exp.className << "() override;\n";
+                hpp << "    ZBLAST_API " << exp.className << "(" << constructorList << ");\n";
+                hpp << "    ZBLAST_API virtual ~" << exp.className << "() override;\n";
 
                 cpp << "\n" << exp.className << "::" << exp.className << "(" << constructorList << ")";
                 if (constructor.size() > 0) {
@@ -347,12 +366,8 @@ bool )" << exp.className << R"(::detail_id_search(int64_t typeId) const {
                         cpp << constructor[i].second << "(std::move(init_" << constructor[i].second << "))";
                     }
                 }
-                cpp << R"( {
-    m_Parent = nullptr;
-    for (auto it = children().begin(); it != children().end(); ++it) ::ast::AstNode::detail_set_parent(*it, this);
-}
-)";
-                cpp << exp.className << "::~" << exp.className << "() {}\n";
+                cpp << "{ this->detail_set_parent(); }\n";
+                cpp << exp.className << "::~" << exp.className << "() { this->detail_destroy_children(); }\n";
 
 
                 hpp << "};\n";

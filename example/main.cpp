@@ -26,7 +26,7 @@ public:
     // so pull the base overloads back in.
     using AstVisitor::visit;
 
-    void* visit(FuncDecl* node, void* data) override {
+    void *visit(FuncDecl *node, void *data) override {
         std::string sig = "FuncDecl " + node->get_FuncName()->get_ID() + "(";
         for (uint32_t i = 0; i < node->num_Args(); ++i) {
             if (i) sig += ", ";
@@ -38,56 +38,60 @@ public:
         return nested(node, data);
     }
 
-    void* visit(IdDecl* node, void* data) override {
+    void *visit(IdDecl *node, void *data) override {
         line("IdDecl '" + node->get_ID() + "'");
         return data;
     }
 
-    void* visit(IdUse* node, void* data) override {
+    void *visit(IdUse *node, void *data) override {
         line("IdUse '" + node->get_ID() + "'");
         return data;
     }
 
-    void* visit(VarStmt* node, void* data) override {
+    void *visit(VarStmt *node, void *data) override {
         line("VarStmt");
         return nested(node, data);
     }
 
-    void* visit(BlockStmt* node, void* data) override {
+    void *visit(BlockStmt *node, void *data) override {
         line("BlockStmt (" + std::to_string(node->num_Stmts()) + " stmts) Parent: " + node->parent()->name());
         return nested(node, data);
     }
-    void* visit(IfStmt* node, void* data) override {
+
+    void *visit(IfStmt *node, void *data) override {
         line(node->has_Else() ? "IfStmt (with else)" : "IfStmt");
         return nested(node, data);
     }
 
-    void* visit(BinaryExpr* node, void* data) override {
+    void *visit(BinaryExpr *node, void *data) override {
         return default_visit(node, data);
     }
-    void* visit(UnaryExpr* node, void* data) override {
+
+    void *visit(UnaryExpr *node, void *data) override {
         return default_visit(node, data);
     }
-    void* visit(IntType* node, void* data) override {
+
+    void *visit(IntType *node, void *data) override {
         return default_visit(node, data);
     }
-    void* visit(UnknownType* node, void* data) override {
+
+    void *visit(UnknownType *node, void *data) override {
         return default_visit(node, data);
     }
 
 private:
-    void* default_visit(AstNode* node, void* data) {
+    void *default_visit(AstNode *node, void *data) {
         line(node->name());
         return nested(node, data);
     }
 
     int m_Depth = 0;
 
-    void line(const std::string& text) {
+    void line(const std::string &text) {
         std::printf("%*s%s\n", m_Depth * 2, "", text.c_str());
     }
 
-    void* nested(AstNode* node, void* data) {
+    void *nested(AstNode *node, void *data) {
         ++m_Depth;
         visit_children(node, data);
         --m_Depth;
@@ -106,16 +110,39 @@ class CountVisitor : public AstVisitor {
 public:
     using AstVisitor::visit;
 
-    void* visit(FuncDecl* n, void* d)   override { bump(d).funcs++;  return visit_children(n, d); }
-    void* visit(VarStmt* n, void* d)    override { bump(d).vars++;   return visit_children(n, d); }
-    void* visit(IfStmt* n, void* d)     override { bump(d).ifs++;    return visit_children(n, d); }
-    void* visit(BinaryExpr* n, void* d) override { bump(d).exprs++;  return visit_children(n, d); }
-    void* visit(UnaryExpr* n, void* d)  override { bump(d).exprs++;  return visit_children(n, d); }
-    void* visit(IdUse* n, void* d)      override { bump(d).idUses++; return visit_children(n, d); }
+    void *visit(FuncDecl *n, void *d) override {
+        bump(d).funcs++;
+        return visit_children(n, d);
+    }
+
+    void *visit(VarStmt *n, void *d) override {
+        bump(d).vars++;
+        return visit_children(n, d);
+    }
+
+    void *visit(IfStmt *n, void *d) override {
+        bump(d).ifs++;
+        return visit_children(n, d);
+    }
+
+    void *visit(BinaryExpr *n, void *d) override {
+        bump(d).exprs++;
+        return visit_children(n, d);
+    }
+
+    void *visit(UnaryExpr *n, void *d) override {
+        bump(d).exprs++;
+        return visit_children(n, d);
+    }
+
+    void *visit(IdUse *n, void *d) override {
+        bump(d).idUses++;
+        return visit_children(n, d);
+    }
 
 private:
-    static Counts& bump(void* d) {
-        Counts& c = *static_cast<Counts*>(d);
+    static Counts &bump(void *d) {
+        Counts &c = *static_cast<Counts *>(d);
         c.total++;
         return c;
     }
@@ -124,9 +151,9 @@ private:
 // ---------------------------------------------------------------------------
 // 3) Generic traversal with no visitor, via children() / begin() / end()
 // ---------------------------------------------------------------------------
-static void dump_shape(AstNode* node, int depth = 0) {
+static void dump_shape(AstNode *node, int depth = 0) {
     std::printf("%*snode with %u children\n", depth * 2, "", node->num_children());
-    for (AstNode* child : node->children()) {
+    for (AstNode *child: node->children()) {
         dump_shape(child, depth + 1);
     }
 }
@@ -140,32 +167,37 @@ static void dump_shape(AstNode* node, int depth = 0) {
 //   }
 // ---------------------------------------------------------------------------
 int main() {
-    auto* cond = new BinaryExpr(
+    auto *cond = new BinaryExpr(
         new IdUse("x"),
         new UnaryExpr(new IdUse("y")));
 
-    auto* thenBlock = new BlockStmt({ new VarStmt(new IdDecl("z")) });
+    auto *thenBlock = new BlockStmt({new VarStmt(new IdDecl("z"))});
     assert(thenBlock->is<AstNode>());
     assert(thenBlock->is<BlockStmt>());
     assert(thenBlock->is<Stmt>());
     assert(thenBlock->as<Stmt>()->is<BlockStmt>());
 
-    auto* ifStmt = new IfStmt(cond, thenBlock, nullopt);
+    auto *ifStmt = new IfStmt(cond, thenBlock, nullopt);
 
-    auto* func = new FuncDecl(
+    auto *ifElseStmt = new IfStmt(new BinaryExpr(new IdUse("y"), new IdUse("x")),
+                                  new BlockStmt({}), new BlockStmt({
+                                      new IfStmt(new IdUse("false"), new VarStmt(new IdDecl("k")), nullopt)
+                                  }));
+
+    auto *func = new FuncDecl(
         new IdDecl("foo"),
-        new IntType(),                             // optional ReturnType (use nullopt for none)
-        { new IdDecl("x") },                     // Arg*
-        { new VarStmt(new IdDecl("y")), ifStmt } // Line*
+        new IntType(), // optional ReturnType (use nullopt for none)
+        {new IdDecl("x")}, // Arg*
+        {new VarStmt(new IdDecl("y")), ifStmt} // Line*
     );
 
-    auto* func2 = new FuncDecl(
+    auto *func2 = new FuncDecl(
         new IdDecl("bar"),
         nullopt,
-        { },
-        { new VarStmt(new IdDecl("x")), ifStmt }
+        {},
+        {new VarStmt(new IdDecl("x")), ifElseStmt}
     );
-    auto* prog = new Program({func, func2});
+    auto *prog = new Program({func, func2});
     assert(func2->has_parent());
     assert(func2->parent()->is<Program>());
     assert(!func2->parent()->is<FuncDecl>());
@@ -187,7 +219,8 @@ int main() {
     std::puts("\n=== children() range-for ===");
     dump_shape(func);
 
-    // Cleanup: whether `delete func;` also frees the children depends on what the
-    // generated destructors do, so check test_ast.cpp before enabling it.
+    // Free nodes
+    delete prog;
+
     return 0;
 }

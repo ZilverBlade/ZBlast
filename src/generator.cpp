@@ -28,6 +28,12 @@ namespace zblast {
         hpp << "#ifndef _ZBLAST_GEN_" << fileName << "_" << "\n";
         hpp << "#define _ZBLAST_GEN_" << fileName << "_ 1" << "\n\n";
         hpp << R"(
+// If you need to export the symbols to a DLL (e.g. windows __declspec(dllexport/dllimport))
+// You may define "ZBLAST_API" to define the export symbols  
+#ifndef ZBLAST_API
+#define ZBLAST_API
+#endif
+
 // Standard C types
 #include <cstdint>
 #include <cstddef>
