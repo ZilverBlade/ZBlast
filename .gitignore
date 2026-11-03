@@ -421,34 +421,8 @@ cmake/
 CTestTestfile.cmake
 Testing/Temporary/
 ./build/
-
-# DX12 agility sdk
-
-!Extern/**
-
-# C# build files
-!Source/S3DManaged/**.sln
-!Source/S3DManaged.Tooling/**.sln
-
-
-# game engine files
-imgui.ini
-game/.cache
-game/Directory.Build.props
-game/MyGame.sln
-resources/Scripts
-/.idea/codeStyles/codeStyleConfig.xml
-/.idea/editor.xml
-/game/MyGame/.idea/.idea.MyGame/.idea/indexLayout.xml
-/.idea/misc.xml
-/.idea/modules.xml
-/.idea/codeStyles/Project.xml
-/.idea/Shard-Tech-4.iml
-/.idea/vcs.xml
-/game/MyGame/.idea/.idea.MyGame/.idea/vcs.xml
-/game/MyGame/.idea/.idea.MyGame/.idea/.gitignore
-/.idea/.gitignore
 .idea/
-obj/
-*.log
 
+# Add exception for dist
+
+!dist/**
