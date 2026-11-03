@@ -53,22 +53,35 @@ Start
           RuleList
             Rule
               Node
-                NodeRef: ComplexChild
+                NodeRef: SomeStmt
                 OptInherit
+                  NodeRef: Stmt
               OptExpansion
                 ChildList
                   Child
-                    LabeledIden: Prefix
-                      Iden: ID
+                    LabeledIden
+                      Iden: VariantChild
                     ChildQual
                   ChildList
+            RuleList
+              Rule
+                Node
+                  NodeRef: ComplexChild
+                  OptInherit
+                OptExpansion
+                  ChildList
                     Child
-                      LabeledIden: OptValue
-                        Iden: INT_LITERAL
+                      LabeledIden: Prefix
+                        Iden: ID
+                      ChildQual
                     ChildList
                       Child
-                        LabeledIden: Suffix
-                          Iden: ID
-                        ChildQual
+                        LabeledIden: OptValue
+                          Iden: INT_LITERAL
                       ChildList
-            RuleList
+                        Child
+                          LabeledIden: Suffix
+                            Iden: ID
+                          ChildQual
+                        ChildList
+              RuleList

@@ -92,22 +92,14 @@ int main(int argc, char **argv) {
         std::string dstFile = argv[3];
 
         // Step 0: reading
-        FILE *srcTextF = fopen(srcFile.c_str(), "r");
-        if (!srcTextF) {
-            char errBuf[128];
-            snprintf(errBuf, 128, "Failed to open source file '%s'!", srcFile.c_str());
-            throw std::runtime_error(errBuf);
+        std::ifstream in(srcFile, std::ios::in);
+        if (!in) {
+            throw std::runtime_error(zblast::util::Format("Failed to open source file '%s'!", srcFile.c_str()));
         }
-
+        std::ostringstream ss;
+        ss << in.rdbuf();
+        std::string text = ss.str();
         // Step 1: scanning
-        std::string text;
-        fseek(srcTextF, 0, SEEK_SET);
-        fseek(srcTextF, 0, SEEK_END);
-        long int fsize = ftell(srcTextF);
-        text.resize(fsize);
-        fseek(srcTextF, 0, SEEK_SET);
-        fread(text.data(), text.size(), text.size(), srcTextF);
-        fclose(srcTextF);
         auto tokens = Tokenize(text.c_str());
 
 

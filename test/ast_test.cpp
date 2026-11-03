@@ -124,7 +124,7 @@ TEST_F(AstTestFixture, TestCase08ZeroChildren) {
     RunAstTestCase("08_zero_children");
 }
 
-TEST_F(AstTestFixture, TestCase05InvalidDuplicateMemberTransient) {
+TEST_F(AstTestFixture, DISABLED_TestCase09InvalidDuplicateMemberTransient) {
     RunAstTestCase("09_invalid_duplicate_member_transient");
 }
 

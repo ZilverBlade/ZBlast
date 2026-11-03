@@ -116,7 +116,7 @@ namespace zblast::test {
     /// Read test file contents into a string
     inline std::string ReadTestFile(const std::string &filename) {
         std::filesystem::path path = GetTestFilePath(filename);
-        std::ifstream file(path, std::ios::in | std::ios::binary);
+        std::ifstream file(path, std::ios::in);
         if (!file) {
             throw std::runtime_error("Failed to open test file: " + path.string());
         }

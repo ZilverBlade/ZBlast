@@ -25,12 +25,12 @@ using namespace zblast::test;
  */
 
 static std::string& NormalizeLineEndings(std::string& string) {
-    for (int i = 0; i < string.size(); ++i) {
-        if (string[i] == '\r') {
-            string.erase(i, 1);
-            --i;
-        }
-    }
+    // for (int i = 0; i < string.size(); ++i) {
+    //     if (string[i] == '\r') {
+    //         string.erase(i, 1);
+    //         --i;
+    //     }
+    // }
     return string;
 }
 
