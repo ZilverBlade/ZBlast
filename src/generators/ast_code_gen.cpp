@@ -186,7 +186,9 @@ bool AstNode::ChildList::empty() const {
 }
 
 AstNode::AstNode() {}
-AstNode::~AstNode() {}
+AstNode::~AstNode() {
+    assert(this->m_Parent == nullptr && "Do not destroy child nodes. Only call 'delete' on the root node!");
+}
 
 ::uint32_t AstNode::line_start() const   { return this->m_LineStart;   }
 ::uint32_t AstNode::line_end() const     { return this->m_LineEnd;     }
@@ -219,6 +221,8 @@ void AstNode::detail_set_parent() {
 void AstNode::detail_destroy_children() {
     ChildList clist = this->children();
     for (auto it = clist.begin(); it != clist.end(); ++it) {
+        AstNode* c = *it;
+        c->m_Parent = nullptr;
         delete *it;
     }
 }
