@@ -184,7 +184,7 @@ int main() {
   auto *ifStmt = new IfStmt(cond, thenBlock, nullopt);
 
   auto *ifElseStmt = new IfStmt(
-      new BinaryExpr(new IdUse("y"), new IdUse("x")), new BlockStmt({}),
+      new BinaryExpr4(new IdUse("y"), new IdUse("x"), "*", "+"), new BlockStmt({}),
       new BlockStmt({new IfStmt(new IdUse("false"),
                                 new VarStmt(new IdDecl("k")), nullopt)}));
 

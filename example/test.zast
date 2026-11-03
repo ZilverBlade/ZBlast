@@ -5,8 +5,15 @@ abstract Expr;
 IdUse  : Expr ::= <ID>;
 
 // Arithmetic
-BinaryExpr  : Expr ::= Lhs:Expr Rhs:Expr;
 UnaryExpr   : Expr ::= Expr;
+
+BinaryExpr  : Expr ::= Lhs:Expr Rhs:Expr;
+
+BinaryExpr2 : BinaryExpr ::= Incredible2:<ID>;
+
+BinaryExpr3 : BinaryExpr2 ;
+
+BinaryExpr4 : BinaryExpr3 ::= Incredible4:<ID>;
 
 VarStmt     : Stmt ::= Variable:IdDecl;
 BlockStmt   : Stmt ::= Stmt*;

@@ -2,6 +2,9 @@
 #include "parsetree.h"
 #include "visitors/expansion_visitor.h"
 
+#include <stack>
+#include <unordered_map>
+
 namespace zblast {
     namespace generators {
         void AstCodeGen::Generate(parsetree::Start* program, std::ostream& hpp, std::ostream& cpp) {
@@ -112,6 +115,7 @@ private:
     ::uint32_t      m_LineEnd     = 0;
     ::uint32_t      m_ColumnStart = 0;
     ::uint32_t      m_ColumnEnd   = 0;
+    bool            m_IsDestroyed = false;
 };
 )";
 
@@ -213,29 +217,67 @@ void AstNode::detail_set_parent() {
     ChildList clist = this->children();
     for (auto it = clist.begin(); it != clist.end(); ++it) {
         AstNode* c = *it;
-        assert(c->m_Parent == nullptr && "Child already has a parent set! Do not assign children to multiple parents!");
+        assert((c->m_Parent == this || c->m_Parent == nullptr) && "Child already has a parent set! Do not assign children to multiple parents!");
         (*it)->m_Parent = this;
     }
 }
 
 void AstNode::detail_destroy_children() {
+    if (this->m_IsDestroyed) return;
     ChildList clist = this->children();
     for (auto it = clist.begin(); it != clist.end(); ++it) {
         AstNode* c = *it;
         c->m_Parent = nullptr;
         delete *it;
     }
+    m_IsDestroyed = true;
 }
 
 bool AstNode::detail_id_search(int64_t typeId) const { return false; }
 )";
 
             // Now actually generate the files
+            
+            struct Constructor {
+                std::string label;
+                std::string elementType;
+                std::string type;
+                std::string member;
+                const visitors::ExpansionMember* memberPtr;
+                const visitors::MemberSpecifier* specifiers;
+                size_t numSpecifiers;
+                parsetree::Node* parent = nullptr;
+            };
+
+            std::unordered_map<std::string, std::vector<Constructor>> constructorMap;
+            std::unordered_map<std::string, parsetree::Rule*> idToRuleMap;    
+
+            for (auto& exp: expansions) {
+                idToRuleMap[exp.className] = exp.rule;
+                std::vector<Constructor> constructor;
+                for (auto& mem : exp.members) {
+                    std::string label = mem.specifiers[0].label;
+                    std::string member0 = "m_Member_" + label;
+                    std::string specifier0;
+                    if (mem.specifiers[0].kind == visitors::EMember_Identifier) {
+                        specifier0 = "::ast::" + mem.specifiers[0].nodeName + "*";
+                    } else if (mem.specifiers[0].kind == visitors::EMember_Literal) {
+                        specifier0 = "String /*" + mem.specifiers[0].nodeName + "*/";
+                    }
+                    if (mem.kind == visitors::EExpansion_Normal) {
+                        constructor.emplace_back(label, specifier0, specifier0, member0, &mem, mem.specifiers.data(), mem.specifiers.size());
+                    } else if (mem.kind == visitors::EExpansion_Opt) {
+                        constructor.emplace_back(label, specifier0, "Opt<" + specifier0 + ">", member0, &mem, mem.specifiers.data(), mem.specifiers.size());
+                    } else if (mem.kind == visitors::EExpansion_List) {
+                        constructor.emplace_back(label, specifier0, "List<" + specifier0 + ">", member0, &mem, mem.specifiers.data(), mem.specifiers.size());
+                    }
+                }
+                constructorMap.emplace(exp.className, std::move(constructor));
+            }
 
             for (auto& exp : expansions) {
                 std::string baseClass;
                 std::string childCount = "";
-                std::vector<std::pair<std::string, std::string>> constructor = {/* type, member */};
                 if (!exp.rule->node->opt_inherit->IsEpsilon) {
                     baseClass = exp.rule->node->opt_inherit->node_ref->ID;
                     childCount = baseClass + "::num_children()";
@@ -278,54 +320,48 @@ bool )" << exp.className << R"(::detail_id_search(int64_t typeId) const {
     else return )" << baseClass << R"(::detail_id_search(typeId);
 }
 )";
-                
+   
                 std::string getChildFromIndex = " if (false) { assert(false); }";
-                for (auto& mem : exp.members) {
-                    std::string member0 = "m_Member_" + mem.specifiers[0].label;
-                    std::string specifier0;
-                    if (mem.specifiers[0].kind == visitors::EMember_Identifier) {
-                        specifier0 = "::ast::" + mem.specifiers[0].nodeName + "*";
-                    } else if (mem.specifiers[0].kind == visitors::EMember_Literal) {
-                        specifier0 = "String /*" + mem.specifiers[0].nodeName + "*/";
-                    }
-                    if (mem.kind == visitors::EExpansion_Normal) {
-                        hpp << "public: [[nodiscard]] ZBLAST_API " << specifier0 << " get_" << mem.specifiers[0].label << "();\n";
-                        hpp << "private: " << specifier0 << " " << member0 << ";\n";
-                        cpp << specifier0 << " " << exp.className << "::get_" << mem.specifiers[0].label << "() { "
-                            "return " << member0 << "; }\n";
+                if (baseClass != "AstNode") {
+                    getChildFromIndex += " else if (index<::ast::" + baseClass + "::num_children()) { return ::ast::" + baseClass + "::child(index); }";
+                }
+                const auto& constructor = constructorMap[exp.className];
+                for (auto& mem : constructor) {
+                    if (mem.memberPtr->kind == visitors::EExpansion_Normal) {
+                        hpp << "public: [[nodiscard]] ZBLAST_API " << mem.type << " get_" << mem.specifiers[0].label << "();\n";
+                        hpp << "private: " << mem.type << " " << mem.member << ";\n";
+                        cpp << mem.type << " " << exp.className << "::get_" << mem.specifiers[0].label << "() { "
+                            "return " << mem.member << "; }\n";
                         if (mem.specifiers[0].kind == visitors::EMember_Identifier) {
-                            getChildFromIndex += "\n else if (index==(" + childCount + ")) { return " + member0 + "; }";
+                            getChildFromIndex += "\n else if (index==(" + childCount + ")) { return " + mem.member + "; }";
                             childCount += "+1U";
                         }
-                        constructor.emplace_back(specifier0, member0);
-                    } else if (mem.kind == visitors::EExpansion_Opt) {
+                    } else if (mem.memberPtr->kind == visitors::EExpansion_Opt) {
                         hpp << "public: [[nodiscard]] ZBLAST_API bool has_" << mem.specifiers[0].label << "();\n";
-                        hpp << "public: [[nodiscard]] ZBLAST_API " << specifier0 << " get_" << mem.specifiers[0].label << "();\n";
-                        hpp << "private: Opt<" << specifier0 << "> " << member0 << ";\n";
-                        cpp << "bool " << exp.className << "::has_" << mem.specifiers[0].label << "() { return this->" << member0 << ".has_value(); }\n";
-                        cpp << specifier0 << " " << exp.className << "::get_" << mem.specifiers[0].label << "() { "
+                        hpp << "public: [[nodiscard]] ZBLAST_API " << mem.elementType << " get_" << mem.specifiers[0].label << "();\n";
+                        hpp << "private: " << mem.type << " " << mem.member << ";\n";
+                        cpp << "bool " << exp.className << "::has_" << mem.specifiers[0].label << "() { return this->" << mem.member << ".has_value(); }\n";
+                        cpp << mem.elementType << " " << exp.className << "::get_" << mem.specifiers[0].label << "() { "
                             "assert(this->has_" << mem.specifiers[0].label << "() && \"Cannot get " << mem.specifiers[0].label << "!\"); "
-                            "return this->" << member0 << ".value(); }\n";
+                            "return this->" << mem.member << ".value(); }\n";
                         if (mem.specifiers[0].kind == visitors::EMember_Identifier) {
-                            getChildFromIndex += "\n else if (" + member0 + ".has_value() && index==(" + childCount + ")) { return " + member0 + ".value(); }";
-                            childCount += "+(this->" + member0 + ".has_value()?1U:0U)";
+                            getChildFromIndex += "\n else if (" + mem.member + ".has_value() && index==(" + childCount + ")) { return " + mem.member + ".value(); }";
+                            childCount += "+(this->" + mem.member + ".has_value()?1U:0U)";
                         }
-                        constructor.emplace_back("Opt<" + specifier0 + ">", member0);
-                    } else if (mem.kind == visitors::EExpansion_List) {
+                    } else if (mem.memberPtr->kind == visitors::EExpansion_List) {
                         hpp << "public: [[nodiscard]] ZBLAST_API uint32_t num_" << mem.specifiers[0].label << "s();\n";
-                        hpp << "public: [[nodiscard]] ZBLAST_API List<" << specifier0 << "> const& get_" << mem.specifiers[0].label << "s();\n";
-                        hpp << "public: [[nodiscard]] ZBLAST_API " << specifier0 << " get_" << mem.specifiers[0].label << "(uint32_t index);\n";
-                        hpp << "private: List<" << specifier0 << "> " << member0 << ";\n";
-                        cpp << "uint32_t " << exp.className << "::num_" << mem.specifiers[0].label << "s() { return static_cast<uint32_t>(this->" << member0 << ".size()); }\n";
-                        cpp << "List<" << specifier0 << "> const& " << exp.className << "::get_" << mem.specifiers[0].label << "s() { return this->" << member0 << "; }\n";
-                        cpp << specifier0 << " " << exp.className << "::get_" << mem.specifiers[0].label << "(uint32_t index) { "
-                            "assert(index < this->" << member0 << ".size() && \"Index out of bounds\"); return this->" << member0 << ".at(index); }\n";
+                        hpp << "public: [[nodiscard]] ZBLAST_API " << mem.type << " const& get_" << mem.specifiers[0].label << "s();\n";
+                        hpp << "public: [[nodiscard]] ZBLAST_API " << mem.elementType << " get_" << mem.specifiers[0].label << "(uint32_t index);\n";
+                        hpp << "private: " << mem.type << " " << mem.member << ";\n";
+                        cpp << "uint32_t " << exp.className << "::num_" << mem.specifiers[0].label << "s() { return static_cast<uint32_t>(this->" << mem.member << ".size()); }\n";
+                        cpp << mem.type << " const& " << exp.className << "::get_" << mem.specifiers[0].label << "s() { return this->" << mem.member << "; }\n";
+                        cpp << mem.elementType << " " << exp.className << "::get_" << mem.specifiers[0].label << "(uint32_t index) { "
+                            "assert(index < this->" << mem.member << ".size() && \"Index out of bounds\"); return this->" << mem.member << ".at(index); }\n";
 
                         if (mem.specifiers[0].kind == visitors::EMember_Identifier) {
-                            getChildFromIndex += "\n else if (index >= (" + childCount + ") && index < ((" + childCount + ") + static_cast<uint32_t>(" + member0 + ".size()))) { return " + member0 + ".at(index-(" + childCount + ")); }";
-                            childCount += "+static_cast<uint32_t>(this->" + member0 + ".size())";
+                            getChildFromIndex += "\n else if (index >= (" + childCount + ") && index < ((" + childCount + ") + static_cast<uint32_t>(" + mem.member + ".size()))) { return " + mem.member + ".at(index-(" + childCount + ")); }";
+                            childCount += "+static_cast<uint32_t>(this->" + mem.member + ".size())";
                         }
-                        constructor.emplace_back("List<" + specifier0 + ">", member0);
                     }
                 }
 
@@ -342,32 +378,68 @@ bool )" << exp.className << R"(::detail_id_search(int64_t typeId) const {
                     hpp << "    [[nodiscard]] int64_t     id() const override;\n";
                     hpp << "    [[nodiscard]] const char* name() const override;\n";
 
-                    cpp << "    [[nodiscard]] int64_t     " << exp.className << "::id() const { return " << typeFull << "::TYPE_ID; }\n";
-                    cpp << "    [[nodiscard]] const char* " << exp.className << "::name() const { return \"" << exp.className << "\"; }\n";
+                    cpp << "    int64_t     " << exp.className << "::id() const { return " << typeFull << "::TYPE_ID; }\n";
+                    cpp << "    const char* " << exp.className << "::name() const { return \"" << exp.className << "\"; }\n";
                 }
-                std::string constructorList = "";
-                for (int i = 0; i < constructor.size(); ++i) {
-                    if (i != 0) {
-                        constructorList += ", ";
+
+                std::stack<parsetree::Node*> parents;
+                { 
+                    parsetree::Node* parent = exp.rule->node.get();
+                    while (parent != nullptr) {
+                        parents.emplace(parent);
+                        if (parent->opt_inherit->IsEpsilon)
+                            parent = nullptr;
+                        else parent = idToRuleMap[parent->opt_inherit->node_ref->ID]->node.get();
                     }
-                    constructorList += constructor[i].first + " init_" + constructor[i].second;
                 }
+
+                std::string fullConstructorList = "";
+                std::string parentInitList = "";
+                while (!parents.empty()) {
+                    parsetree::Node* parent = parents.top();
+                    parents.pop();
+                    const auto &parentConstructor = constructorMap[parent->node_ref->ID];
+                    for (int i = 0; i < parentConstructor.size(); ++i) {
+                        if (!fullConstructorList.empty()) {
+                            fullConstructorList += ", ";
+                        }
+                        fullConstructorList += parentConstructor[i].type + " init_" + parentConstructor[i].label;
+                        if (!parents.empty()) {
+                            if (!parentInitList.empty()) {
+                                parentInitList += ", ";
+                            }
+                            parentInitList += " std::move(init_" + parentConstructor[i].label + ")";
+                        }
+                    }
+                }
+
                 if (exp.rule->IsAbstract) {
                     hpp << "protected: \n";
                 } else {
                     hpp << "public: \n";
                 }
-                hpp << "    ZBLAST_API " << exp.className << "(" << constructorList << ");\n";
+                hpp << "    ZBLAST_API " << exp.className << "(" << fullConstructorList << ");\n";
                 hpp << "    ZBLAST_API virtual ~" << exp.className << "() override;\n";
 
-                cpp << "\n" << exp.className << "::" << exp.className << "(" << constructorList << ")";
-                if (constructor.size() > 0) {
+                cpp << "\n" << exp.className << "::" << exp.className << "(" << fullConstructorList << ")";
+                
+                parsetree::Node* immediateParent = exp.rule->node->opt_inherit->IsEpsilon ? nullptr 
+                    : idToRuleMap[exp.rule->node->opt_inherit->node_ref->ID]->node.get();
+                
+                if (constructor.size() > 0 || immediateParent) {
                     cpp << "\n: ";
+                    bool addComma = false;
+                    if (immediateParent) {
+                        cpp << immediateParent->node_ref->ID << "(" << parentInitList << ")";
+                        addComma = true;
+                    }
                     for (int i = 0; i < constructor.size(); ++i) {
-                        if (i != 0) {
+                        if (addComma) {
                             cpp << ", ";
+                        } else {
+                            addComma = true;
                         }
-                        cpp << constructor[i].second << "(std::move(init_" << constructor[i].second << "))";
+                        cpp << constructor[i].member << "(std::move(init_" << constructor[i].label << "))";
                     }
                 }
                 cpp << "{ this->detail_set_parent(); }\n";
