@@ -1,0 +1,4 @@
+abstract Stmt;
+abstract Expr;
+IfStmt : Stmt ::= Cond:Expr Stmt;
+IfElseStmt : IfStmt ::= Stmt; // should error, Stmt shows up twice, once here, and once in IfStmt
