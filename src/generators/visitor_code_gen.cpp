@@ -5,7 +5,7 @@
 namespace zblast {
     namespace generators {
         std::string VisitorCodeGen::GatherOutputStem(const std::string& fileStem) {
-            return fileStem + "_visitors";
+            return fileStem + "_visitor";
         }
 
         void VisitorCodeGen::Generate(parsetree::Start* program, std::ostream& hpp, std::ostream& cpp) {

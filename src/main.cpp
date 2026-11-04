@@ -102,24 +102,23 @@ LONG WINAPI CrashHandler(EXCEPTION_POINTERS* ExceptionInfo) {
 
 
         len = snprintf(msg, sizeof(msg),
-            "Access Violation: Attempted to %s memory at address %p.\n"
-            "        Faulting instruction at %p\n",
+            "Access Violation: Attempted to %s memory at address %p. Faulting instruction at %p",
             accessType, targetAddress, faultAddress);
         break;
     }
     case EXCEPTION_STACK_OVERFLOW:
-        len = snprintf(msg, sizeof(msg), "Stack Overflow. Faulting instruction at %p\n", faultAddress);
+        len = snprintf(msg, sizeof(msg), "Stack Overflow. Faulting instruction at %p", faultAddress);
         break;
     case EXCEPTION_ILLEGAL_INSTRUCTION:
-        len = snprintf(msg, sizeof(msg), "Illegal Instruction. Faulting instruction at %p\n", faultAddress);
+        len = snprintf(msg, sizeof(msg), "Illegal Instruction. Faulting instruction at %p", faultAddress);
         break;
     case EXCEPTION_INT_DIVIDE_BY_ZERO:
     case EXCEPTION_FLT_DIVIDE_BY_ZERO:
-        len = snprintf(msg, sizeof(msg), "Divide by Zero. Faulting instruction at %p\n", faultAddress);
+        len = snprintf(msg, sizeof(msg), "Divide by Zero. Faulting instruction at %p", faultAddress);
         break;
     default:
         len = snprintf(
-            msg, sizeof(msg), "Unhandled exception: 0x%08X at instruction %p\n", exceptionCode, faultAddress);
+            msg, sizeof(msg), "Unhandled exception: 0x%08X at instruction %p", exceptionCode, faultAddress);
         break;
     }
 
@@ -142,7 +141,7 @@ LONG WINAPI CrashHandler(EXCEPTION_POINTERS* ExceptionInfo) {
 
 void crash_handler(int sig, siginfo_t* info, void* ucontext) {
     char msg[128];
-    int len = snprintf(msg, sizeof(msg), "Segmentation fault: signal %d. Faulting address: %p\n", sig, info->si_addr);
+    int len = snprintf(msg, sizeof(msg), "Segmentation fault: signal %d. Faulting address: %p", sig, info->si_addr);
 
     snprintf(g_ExceptionErrorBuf.message.data(), g_ExceptionErrorBuf.message.length(), zblast::k_ErrorDefs[zblast::EError_Z999].fmt, msg);
     g_ExceptionErrorBuf.PrettyPrint(std::cerr, srcFileAbsolute, errorFormat);
