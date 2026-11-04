@@ -10,11 +10,16 @@ namespace zblast {
             ESeverity_Warning,
             ESeverity_Error,
         };
+        
+        enum EErrorFormat {
+            EErrorFormat_GNU,
+            EErrorFormat_MSVC,
+        };
 
         static const char* k_ErrorSevAlignedStrings[] = {
-            "[ MESSAGE ]",
-            "[ WARNING ]",
-            "[  ERROR  ]",
+            "message",
+            "warning",
+            "error",
         };
 
 #define ERROR_CODES(X)                                                               \
@@ -55,7 +60,7 @@ namespace zblast {
             int column;
             std::string message;
 
-            std::string PrettyPrint() const;
+            std::string PrettyPrint(const std::string& inputFile, EErrorFormat format) const;
         };
 
         class ErrorVisitor : public Visitor {

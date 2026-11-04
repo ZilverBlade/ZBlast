@@ -5,6 +5,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 option(ZBLAST_WERROR "Treat warnings as errors" ON)
+set(ZBLAST_VERSION "HEAD" CACHE STRING "ZBlast version string")
 
 find_program(RE2C_EXECUTABLE re2c REQUIRED)
 
@@ -52,6 +53,7 @@ else()
     target_compile_options(zblast PRIVATE -Werror)
 endif()
 endif()
+target_compile_definitions(zblast PRIVATE ZBLAST_VERSION="${ZBLAST_VERSION}")
 
 enable_testing()
 

@@ -1,1 +1,1 @@
-[  ERROR  ] Z003 @ 1:13 | Undefined class "Stmt" referenced.
+input.zast:1:13: error: Z003: Undefined class "Stmt" referenced

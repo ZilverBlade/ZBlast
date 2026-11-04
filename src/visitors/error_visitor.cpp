@@ -21,11 +21,17 @@ namespace zblast {
             });                                                                       \
         } while (false)
 
-        std::string Error::PrettyPrint() const {
-            return util::Format(
-                "%s %s @ %d:%d | %s.",
+        std::string Error::PrettyPrint(const std::string& inputFile, EErrorFormat format) const {
+            const char* fmt = "";
+            if (format == EErrorFormat_GNU) {
+                fmt = "%s:%d:%d: %s: %s: %s";
+            } else if (format == EErrorFormat_MSVC) {
+                fmt = "%s(%d,%d): %s %s: %s";
+            }
+            return util::Format(fmt, inputFile.c_str(), line, column,
                 k_ErrorSevAlignedStrings[k_ErrorDefs[code].severity], k_ErrorDefs[code].code,
-                line, column, message.c_str());
+                message.c_str()
+            );
         }
         
         std::vector<Error> ErrorVisitor::CollectErrors(parsetree::Start* program) {

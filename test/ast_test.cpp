@@ -74,7 +74,7 @@ protected:
             if (i > 0) {
                 actualOutput += "\n";
             }
-            actualOutput += errors[i].PrettyPrint();
+            actualOutput += errors[i].PrettyPrint("input.zast", visitors::EErrorFormat_GNU);
         }
 
         // Write output.out in the test case directory

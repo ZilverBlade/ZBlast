@@ -1,1 +1,1 @@
-[  ERROR  ] Z003 @ 1:10 | Undefined class "IdUse" referenced.
+input.zast:1:10: error: Z003: Undefined class "IdUse" referenced

@@ -1,1 +1,1 @@
-[  ERROR  ] Z002 @ 4:25 | Conflicting member name "Stmt", already defined at 3:29.
+input.zast:4:25: error: Z002: Conflicting member name "Stmt", already defined at 3:29.
