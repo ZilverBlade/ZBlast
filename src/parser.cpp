@@ -31,7 +31,7 @@ namespace zblast {
 
     ParserException::~ParserException() {}
 
-    const char* ParserException::what() const {
+    const char* ParserException::what() const noexcept {
         return m_Message.c_str();
     }
 

@@ -10,7 +10,7 @@ namespace zblast {
         ParserException(int line, int col, ETokenType failToken, const char* rule);
         ~ParserException();
 
-        const char* what() const override;
+        const char* what() const noexcept override;
 
         int Line() const;
         int Column() const;
