@@ -61,7 +61,7 @@ jobs:
           mkdir -p dist/zblast
           # Windows (MSVC) puts binaries in build/Release/, others in build/
           cp build/Release/zblast.exe dist/zblast/ 2>/dev/null || cp build/zblast dist/zblast/
-          cp packaging/. dist/zblast/
+          cp -r packaging/. dist/zblast/
           cp README.md LICENSE dist/zblast/ 2>/dev/null || true
           cd dist
           if [ "${{ runner.os }}" = "Windows" ]; then
