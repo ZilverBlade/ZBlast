@@ -11,7 +11,7 @@ BinaryExpr  : Expr ::= Lhs:Expr Rhs:Expr;
 
 BinaryExpr2 : BinaryExpr ::= Incredible2:<ID>;
 
-BinaryExpr3 : BinaryExpr2 ;
+BinaryExpr3 : BinaryExpr2;
 
 BinaryExpr4 : BinaryExpr3 ::= Incredible4:<ID>;
 

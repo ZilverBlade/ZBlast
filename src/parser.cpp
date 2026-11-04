@@ -1,4 +1,5 @@
 #include "parser.h"
+#include "util.h"
 
 #include <cassert>
 #include <cstdio>
@@ -18,10 +19,31 @@ using List = std::vector<T>;
 using std::make_unique;
 
 namespace zblast {
+    ParserException::ParserException(int line, int col, ETokenType expectedToken, Token receivedToken) 
+        : m_Line(line), m_Col(col), m_ExpectedToken(expectedToken), m_ReceivedToken(receivedToken), m_HasExpectedToken(true),
+        m_Message(util::Format("Expected token %s but got %s! @ %d:%d", 
+            ETokenType_ToString_Literal(expectedToken), Token_ToString(receivedToken), line, col)) {}
+
+    ParserException::ParserException(int line, int col, ETokenType failedToken, const char* rule)
+        : m_Line(line), m_Col(col), m_ReceivedToken(failedToken), m_HasExpectedToken(false), m_Rule(rule),
+        m_Message(util::Format("Failed to match parse token %s in rule %s! @ %d:%d", 
+            ETokenType_ToString_Literal(failedToken), rule, line, col)) {}
+
+    ParserException::~ParserException() {}
+
+    const char* ParserException::what() const {
+        return m_Message.c_str();
+    }
+
+    int ParserException::Line() const { return m_Line; }
+    int ParserException::Column() const { return m_Col; }
+    ETokenType ParserException::Expected() const { return m_ExpectedToken; }
+    const Token& ParserException::Received() const { return m_ReceivedToken; }
+    bool ParserException::HasExpectedToken() const { return m_HasExpectedToken; }
+    const char* ParserException::Rule() const { return m_Rule; }
+
 #define PARSER_PANIC() do {\
-    char errBuf[128];\
-    snprintf(errBuf, sizeof(errBuf), "Failed to match parse token %s in rule %s! @ %d:%d", ETokenType_ToString(parser.Peek()), __func__, parser.CurrLine(), parser.CurrCol());\
-    throw std::runtime_error(errBuf);\
+    throw ParserException(parser.CurrLine(), parser.CurrCol(), parser.Peek(), __func__);\
 } while (false)
 
     static Ptr<parsetree::Iden> Parse_Iden(Parser &parser) {
@@ -263,10 +285,7 @@ namespace zblast {
     Token Parser::Accept(ETokenType expected) {
         ETokenType actual = Peek();
         if (actual != expected) {
-            char errBuf[128];
-            snprintf(errBuf, sizeof(errBuf), "Expected token %s but got %s! @ %d:%d", ETokenType_ToString(expected),
-                     ETokenType_ToString(actual), CurrLine(), CurrCol());
-            throw std::runtime_error(errBuf);
+            throw ParserException(CurrLine(), CurrCol(), expected, *m_Ptr);
         }
         Token token = *m_Ptr;
         if (actual == EToken_EOF) {

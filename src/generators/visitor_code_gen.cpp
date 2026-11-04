@@ -4,6 +4,10 @@
 
 namespace zblast {
     namespace generators {
+        std::string VisitorCodeGen::GatherOutputStem(const std::string& fileStem) {
+            return fileStem + "_visitors";
+        }
+
         void VisitorCodeGen::Generate(parsetree::Start* program, std::ostream& hpp, std::ostream& cpp) {
             auto declarations = visitors::DeclarationVisitor().CollectDeclarations(program);
             
@@ -53,8 +57,8 @@ void* AstVisitor::visit_children(::ast::AstNode* node, void* data) {
 )";
         }
 
-        std::string VisitorCodeGen::AdditionalIncludes(const std::string &fileName) {
-            return "#include \"" + fileName.substr(0, fileName.length() - sizeof("_visitor") + 1) + "_ast.hpp\"\n";
+        std::string VisitorCodeGen::AdditionalIncludes(const std::string & stem) {
+            return "#include \"" + stem + "_ast.hpp\"\n";
         }
     } // namespace generators
 } // namespace zblast

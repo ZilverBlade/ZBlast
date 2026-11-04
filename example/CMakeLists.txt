@@ -1,28 +1,26 @@
 set(ZBLAST_INPUT "${CMAKE_CURRENT_SOURCE_DIR}/test.zast")
-set(ZBLAST_AST_OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/test_ast")
-set(ZBLAST_VISITOR_OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/test_visitor")
+set(ZBLAST_OUT_DIR "${CMAKE_CURRENT_BINARY_DIR}")
+
+set(ZBLAST_AST_OUTPUT "${ZBLAST_OUT_DIR}/test_ast")
+set(ZBLAST_VISITOR_OUTPUT "${ZBLAST_OUT_DIR}/test_visitors")
 
 add_custom_command(
-        OUTPUT ${ZBLAST_AST_OUTPUT}.cpp ${ZBLAST_AST_OUTPUT}.hpp
-        DEPENDS zblast ${ZBLAST_INPUT}
-        COMMAND zblast -a ${ZBLAST_INPUT} ${ZBLAST_AST_OUTPUT}
-        COMMENT "Generating test_ast"
-        VERBATIM
-)
-add_custom_command(
-        OUTPUT ${ZBLAST_VISITOR_OUTPUT}.cpp ${ZBLAST_VISITOR_OUTPUT}.hpp
-        DEPENDS zblast ${ZBLAST_INPUT}
-        COMMAND zblast -v ${ZBLAST_INPUT} ${ZBLAST_VISITOR_OUTPUT}
-        COMMENT "Generating test_visitor"
-        VERBATIM
+    OUTPUT
+        ${ZBLAST_AST_OUTPUT}.hpp ${ZBLAST_AST_OUTPUT}.cpp
+        ${ZBLAST_VISITOR_OUTPUT}.hpp ${ZBLAST_VISITOR_OUTPUT}.cpp
+    COMMAND zblast -g ast,visitor -d "${ZBLAST_OUT_DIR}" "${ZBLAST_INPUT}"
+    MAIN_DEPENDENCY ${ZBLAST_INPUT}
+    DEPENDS zblast
+    COMMENT "Generating test AST and visitors"
+    VERBATIM
 )
 
 add_executable(zblast_example
-        main.cpp
-        ${ZBLAST_AST_OUTPUT}.cpp
-        ${ZBLAST_VISITOR_OUTPUT}.cpp
+    main.cpp
+    ${ZBLAST_AST_OUTPUT}.cpp
+    ${ZBLAST_VISITOR_OUTPUT}.cpp
 )
 
 target_include_directories(zblast_example PRIVATE
-        "${CMAKE_CURRENT_BINARY_DIR}"
+        "${ZBLAST_OUT_DIR}"
 )

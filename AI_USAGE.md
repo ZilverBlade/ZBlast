@@ -4,3 +4,4 @@ AI was used for:
 - Generating sample code
 - Help set up the `cmake-package.yml` workflow
 - Learning how to use re2c
+- Understanding how to build a standard CLI application

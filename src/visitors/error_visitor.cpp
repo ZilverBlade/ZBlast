@@ -11,28 +11,10 @@
 
 namespace zblast {
     namespace visitors {
-#define PROVIDE_ERROR(Code, L, C, ...)                                                \
-        do {                                                                          \
-            m_Errors.push_back({                                                      \
-                .code = EError_##Code,                                                \
-                .line = (L),                                                          \
-                .column = (C),                                                        \
-                .message = util::Format(k_ErrorDefs[EError_##Code].fmt, __VA_ARGS__), \
-            });                                                                       \
+#define PROVIDE_ERROR(Code, L, C, ...)                                  \
+        do {                                                            \
+            m_Errors.emplace_back(MAKE_ERROR(Code, L, C, __VA_ARGS__)); \
         } while (false)
-
-        std::string Error::PrettyPrint(const std::string& inputFile, EErrorFormat format) const {
-            const char* fmt = "";
-            if (format == EErrorFormat_GNU) {
-                fmt = "%s:%d:%d: %s: %s: %s";
-            } else if (format == EErrorFormat_MSVC) {
-                fmt = "%s(%d,%d): %s %s: %s";
-            }
-            return util::Format(fmt, inputFile.c_str(), line, column,
-                k_ErrorSevAlignedStrings[k_ErrorDefs[code].severity], k_ErrorDefs[code].code,
-                message.c_str()
-            );
-        }
         
         std::vector<Error> ErrorVisitor::CollectErrors(parsetree::Start* program) {
             program->Accept(this, nullptr);
@@ -54,7 +36,7 @@ namespace zblast {
                     }
                 } else {
                     PROVIDE_ERROR(
-                        Z001, decl.declaration->LineStart, decl.declaration->ColumnStart,
+                        Z201, decl.declaration->LineStart, decl.declaration->ColumnStart,
                         decl.className.c_str(),
                         it->second->declaration->LineStart, it->second->declaration->ColumnStart
                     );
@@ -87,7 +69,7 @@ namespace zblast {
                     if (memDecl.size() > 1) {
                         for (int i = 1; i < memDecl.size(); ++i) {
                             PROVIDE_ERROR(
-                                Z002, memDecl[i]->LineStart, memDecl[i]->ColumnStart,
+                                Z202, memDecl[i]->LineStart, memDecl[i]->ColumnStart,
                                 label.c_str(),
                                 memDecl[0]->LineStart, memDecl[0]->ColumnStart
                             );
@@ -102,7 +84,7 @@ namespace zblast {
                 if (!foundDeclarations.contains(declName)) {
                     for (auto& ref : refs) {
                         PROVIDE_ERROR(
-                            Z003, ref->LineStart, ref->ColumnStart,
+                            Z203, ref->LineStart, ref->ColumnStart,
                             declName.c_str()
                         );
                     }
@@ -113,7 +95,7 @@ namespace zblast {
             for (auto& [declName, decl]: foundDeclarations) {
                 if (decl->isAbstract && referencedIdentifiers[declName].empty()) {
                     PROVIDE_ERROR(
-                        Z004, decl->rule->LineStart, decl->rule->ColumnStart,
+                        Z204, decl->rule->LineStart, decl->rule->ColumnStart,
                         declName.c_str()
                     );
                 }
@@ -124,7 +106,7 @@ namespace zblast {
                 if (!decl->isAbstract && !decl->rule->opt_expansion->IsEpsilon
                     && decl->rule->opt_expansion->child_list->IsEpsilon) {
                     PROVIDE_ERROR(
-                        Z005, decl->rule->LineStart, decl->rule->ColumnStart,
+                        Z205, decl->rule->LineStart, decl->rule->ColumnStart,
                         declName.c_str()
                     );
                 }

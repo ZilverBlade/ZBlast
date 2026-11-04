@@ -7,6 +7,10 @@
 
 namespace zblast {
     namespace generators {
+        std::string AstCodeGen::GatherOutputStem(const std::string& fileStem) {
+            return fileStem + "_ast";
+        }
+
         void AstCodeGen::Generate(parsetree::Start* program, std::ostream& hpp, std::ostream& cpp) {
             // forward declare everything
             auto expansions = visitors::ExpansionVisitor().CollectExpansions(program);

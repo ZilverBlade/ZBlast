@@ -30,9 +30,9 @@ NewStmt : Stmt ::= LetStmt | ConstStmt; // A variant between LetStmt and ConstSt
 
 You can integrate ZBlast in a cmake project, as it is a command line application that can generate c++ files.
 
-- Generate the AST files: `zblast -a <source> <target>`
-  - Creates `<target>.hpp` and `<target>.cpp`
+- Generate the AST files: `zblast --generate ast -d <target_dir> <source>.zast`
+  - Creates `<source>_ast.hpp` and `<source>_ast.cpp` under `<target_dir>`
   
-- Generate visitor files: `zblast -v <source> <target>`
-  - Creates `<target>.hpp` and `<target>.cpp` 
+- Generate the AST & visitor files: `zblast --generate ast,visitor -d <target_dir> <source>.zast`
+  - Creates `<source>_ast.hpp`, `<source>_ast.cpp`, `<source>_visitor.hpp` and `<source>_visitor.cpp` under `<target_dir>`
   > Note: required if you want to use the AstNode::accept(AstVisitor* visitor, void* data); function.

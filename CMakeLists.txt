@@ -23,6 +23,7 @@ add_custom_command(
 add_library(zblast_core STATIC
     ${LEXER_OUTPUT}
         
+    src/error.cpp
     src/parser.cpp
     src/visitor.cpp
     src/generator.cpp

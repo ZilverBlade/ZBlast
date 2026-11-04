@@ -4,6 +4,30 @@
 #include <memory>
 
 namespace zblast {
+    class ParserException : public std::exception {
+    public:
+        ParserException(int line, int col, ETokenType expectedToken, Token receivedToken);
+        ParserException(int line, int col, ETokenType failToken, const char* rule);
+        ~ParserException();
+
+        const char* what() const override;
+
+        int Line() const;
+        int Column() const;
+        ETokenType Expected() const;
+        const Token& Received() const;
+        bool HasExpectedToken() const;
+        const char* Rule() const;
+    private:
+        std::string m_Message;
+        int m_Line;
+        int m_Col;
+        ETokenType m_ExpectedToken;
+        Token m_ReceivedToken;
+        bool m_HasExpectedToken;
+        const char* m_Rule = nullptr;
+    };
+
     class Parser {
     public:
         std::unique_ptr<parsetree::Start> Parse(Token *pTokens);

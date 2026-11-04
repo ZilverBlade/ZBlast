@@ -69,23 +69,23 @@ protected:
 
         const auto &errors = visitors::ErrorVisitor().CollectErrors(tree.get());
 
-        std::string actualOutput;
+        std::stringstream actualOutput;
         for (size_t i = 0; i < errors.size(); ++i) {
             if (i > 0) {
-                actualOutput += "\n";
+                actualOutput << "\n";
             }
-            actualOutput += errors[i].PrettyPrint("input.zast", visitors::EErrorFormat_GNU);
+            errors[i].PrettyPrint(actualOutput, "input.zast", EErrorFormat_GNU);
         }
 
         // Write output.out in the test case directory
         std::ofstream outFile(outputPath, std::ios::out | std::ios::binary | std::ios::trunc);
         ASSERT_TRUE(outFile.is_open()) << "Failed to open output file: " << outputPath;
-        outFile << actualOutput;
+        outFile << actualOutput.rdbuf();
         outFile.close();
 
         // Read and compare with output.expected
         std::string expectedOutput = ReadTestFile((std::filesystem::path("ast") / caseName / "output.expected").string());
-        EXPECT_EQ(NormalizeLineEndings(actualOutput), NormalizeLineEndings(expectedOutput))
+        EXPECT_EQ(NormalizeLineEndings(actualOutput.str()), NormalizeLineEndings(expectedOutput))
             << "Mismatch in AST test case: " << caseName;
     }
 };

@@ -1,1 +1,1 @@
-input.zast:2:1: error: Z001: Redefinition of class "Expr", already defined at 1:1
+input.zast:2:1: error: Z201: Redefinition of class "Expr", already defined at 1:1

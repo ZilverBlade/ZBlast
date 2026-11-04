@@ -21,10 +21,11 @@ namespace zblast {
     
     class Generator {
     public:
-        void Generate(parsetree::Start* node, std::ostream& hpp, std::ostream& cpp, const std::string& fileName);
+        virtual std::string GatherOutputStem(const std::string& fileStem) = 0;
+        void Generate(parsetree::Start* node, std::ostream& hpp, std::ostream& cpp, const std::string& stem);
 
     protected:
-        virtual std::string AdditionalIncludes(const std::string& fileName);
+        virtual std::string AdditionalIncludes(const std::string& stem);
         virtual void Generate(parsetree::Start* node, std::ostream& hpp, std::ostream& cpp) = 0;
 
     };
