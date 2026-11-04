@@ -136,14 +136,13 @@ LONG WINAPI CrashHandler(EXCEPTION_POINTERS* ExceptionInfo) {
     return EXCEPTION_EXECUTE_HANDLER;
 }
 #define SETUP_EXCEPTION_HANDLER SetUnhandledExceptionFilter(CrashHandler)
-#endif
-#ifdef PYRO_PLATFORM_FAMILY_UNIX
+#else
 #include <signal.h>
 #include <unistd.h>
 
 void crash_handler(int sig, siginfo_t* info, void* ucontext) {
     char msg[128];
-    int len = snprintf(msg, sizeof(msg), "Segmentation fault : signal % d.Faulting address : % p\n", sig, info->si_addr);
+    int len = snprintf(msg, sizeof(msg), "Segmentation fault: signal %d. Faulting address: %p\n", sig, info->si_addr);
 
     snprintf(g_ExceptionErrorBuf.message.data(), g_ExceptionErrorBuf.message.length(), zblast::k_ErrorDefs[zblast::EError_Z999].fmt, msg);
     g_ExceptionErrorBuf.PrettyPrint(std::cerr, srcFileAbsolute, errorFormat);
