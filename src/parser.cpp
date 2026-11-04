@@ -22,7 +22,7 @@ namespace zblast {
     ParserException::ParserException(int line, int col, ETokenType expectedToken, Token receivedToken) 
         : m_Line(line), m_Col(col), m_ExpectedToken(expectedToken), m_ReceivedToken(receivedToken), m_HasExpectedToken(true),
         m_Message(util::Format("Expected token %s but got %s! @ %d:%d", 
-            ETokenType_ToString_Literal(expectedToken), Token_ToString(receivedToken), line, col)) {}
+            ETokenType_ToString_Literal(expectedToken), Token_ToString(receivedToken).c_str(), line, col)) {}
 
     ParserException::ParserException(int line, int col, ETokenType failedToken, const char* rule)
         : m_Line(line), m_Col(col), m_ReceivedToken(failedToken), m_HasExpectedToken(false), m_Rule(rule),
