@@ -2,7 +2,7 @@ include_guard(GLOBAL)
 
 # Internal: generate + attach sources for one .zast file.
 function(_zblast_add target scope input)
-    set(gen_dir "${CMAKE_CURRENT_BINARY_DIR}/zast/${target}")
+    set(gen_dir "${CMAKE_CURRENT_BINARY_DIR}/gen/zast/${target}")
     file(MAKE_DIRECTORY "${gen_dir}")
 
     cmake_path(ABSOLUTE_PATH input NORMALIZE) # relative to CMAKE_CURRENT_SOURCE_DIR
@@ -11,24 +11,30 @@ function(_zblast_add target scope input)
     set(ast "${gen_dir}/${name}_ast")
     set(outputs ${ast}.cpp ${ast}.hpp)
 
-    add_custom_command(
-            OUTPUT  ${ast}.cpp ${ast}.hpp
-            COMMAND zblast::zblast -a "${input}" "${ast}"
-            DEPENDS "$<TARGET_FILE:zblast::zblast>" "${input}"
-            COMMENT "zblast: generating ${name}_ast"
-            VERBATIM
-    )
+	if (MSVC) 
+		set(error_format "msvc")
+	else()
+		set(error_format "gnu")
+	endif()
 
     if(ZBLAST_GENERATE_VISITORS)
         set(visitor "${gen_dir}/${name}_visitor")
         list(APPEND outputs ${visitor}.cpp ${visitor}.hpp)
-        add_custom_command(
-                OUTPUT  ${visitor}.cpp ${visitor}.hpp
-                COMMAND zblast::zblast -v "${input}" "${visitor}"
-                DEPENDS "$<TARGET_FILE:zblast::zblast>" "${input}"
-                COMMENT "zblast: generating ${name}_visitor"
-                VERBATIM
-        )
+		add_custom_command(
+			OUTPUT  ${ast}.cpp ${ast}.hpp ${visitor}.cpp ${visitor}.hpp
+			COMMAND zblast::zblast --error-format "${error_format}" --generate ast,visitor --out-dir "${gen_dir}" "${input}"
+			DEPENDS "$<TARGET_FILE:zblast::zblast>" "${input}"
+			COMMENT "zblast: generating ${name} ast and visitor"
+			VERBATIM
+		)
+	else()
+		add_custom_command(
+			OUTPUT  ${ast}.cpp ${ast}.hpp
+			COMMAND zblast::zblast --error-format "${error_format}" --generate ast --out-dir "${gen_dir}" "${input}"
+			DEPENDS "$<TARGET_FILE:zblast::zblast>" "${input}"
+			COMMENT "zblast: generating ${name} ast"
+			VERBATIM
+		)
     endif()
 
     target_sources(${target} ${scope} ${outputs})

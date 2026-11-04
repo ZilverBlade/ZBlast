@@ -43,6 +43,8 @@ target_include_directories(zblast_core PUBLIC
 add_executable(zblast
     src/main.cpp
 )
+add_executable(zblast::zblast ALIAS zblast)
+
 target_link_libraries(zblast PRIVATE zblast_core)
 
 if(ZBLAST_WERROR)
@@ -67,4 +69,8 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
 add_subdirectory(test)
+
+# For the zast language support
+add_subdirectory(packaging)
+
 add_subdirectory(example)

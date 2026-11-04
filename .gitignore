@@ -423,6 +423,6 @@ Testing/Temporary/
 ./build/
 .idea/
 
-# Add exception for dist
+# Add exception for packaging
 
-!dist/**
+!packaging/**
