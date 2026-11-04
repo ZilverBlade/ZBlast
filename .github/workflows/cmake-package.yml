@@ -46,7 +46,7 @@ jobs:
           if [ "${{ runner.os }}" = "macOS" ]; then
             EXTRA="-DCMAKE_OSX_ARCHITECTURES=arm64;x86_64"
           fi
-          cmake -B build -DCMAKE_BUILD_TYPE=Release -DZBLAST_WERROR=OFF $EXTRA
+          cmake -B build -DCMAKE_BUILD_TYPE=Release -DZBLAST_WERROR=OFF -DZBLAST_VERSION=${{ github.ref_name }} $EXTRA
 
       - name: Build
         run: cmake --build build --config Release --parallel 4

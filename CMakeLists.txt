@@ -7,6 +7,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 option(ZBLAST_WERROR "Treat warnings as errors" ON)
 set(ZBLAST_VERSION "HEAD" CACHE STRING "ZBlast version string")
 
+message(STATUS "ZBlast version: ${ZBLAST_VERSION}")
+
 find_program(RE2C_EXECUTABLE re2c REQUIRED)
 
 set(LEXER_INPUT "${CMAKE_CURRENT_SOURCE_DIR}/src/lexer.re")
