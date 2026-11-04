@@ -1,0 +1,10 @@
+%source {
+#include <iostream>
+}
+
+aspect HelloAspect {
+public:
+    construct Program() {
+        std::cout << "Hello Program! Program has " << num_FuncDecls() << " function declarations!" << std::endl;
+    }
+};

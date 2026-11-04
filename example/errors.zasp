@@ -1,0 +1,41 @@
+%header {
+#include <string>
+#include <vector>
+#include <cstdint>
+#include <ostream>
+}
+
+%source {
+#include <iomanip>
+}
+
+aspect Errors {
+public:
+    %header { 
+        struct Error {
+            std::string message;
+            uint32_t line, column;
+            void pretty_print(std::ostream& out) const;
+        };
+    }
+    %source {
+        void Error::pretty_print(std::ostream& out) const {
+            out << "error at " << line << ":" << column << ": " << message;
+        }
+    }
+
+    collection std::vector<Error> Program::errors;
+};
+
+aspect ErrorProvider {
+    // Contributed after Program is finished constructing.
+    contribute FuncDecl to Program::errors(auto& out) {
+        if (has_ReturnType() && get_ReturnType()->is_unknown()) {
+            out.push_back({
+                .message = "symbol '" + get_IdDecl()->get_ID() + "' has an unknown return type",
+                .line = start_line(),
+                .column = start_column(),
+            });
+        }
+    }
+};

@@ -1,0 +1,14 @@
+%header {
+#include <cstdint>
+}
+
+aspect Depth {
+public:
+    inherited uint32_t AstNode::depth() const { return 0; }
+    // inherited uint32_t AstNode::depth() = 0; // Or for pure inherited
+
+    // auto can deduce the type automatically
+    inherited auto AstNode::child(uint32_t)::depth() const override {
+        return depth() + 1;
+    }
+};

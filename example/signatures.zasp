@@ -1,0 +1,51 @@
+%header {
+#include <string>
+#include <vector>
+#include <ostream>
+}
+
+%source {
+#include <iomanip>
+}
+
+aspect Signatures {
+public:
+    // generic code block, defined in header file. NOTE this will be defined in the ast header!! (test_ast.hpp)
+    %header { 
+        struct FunctionSignature {
+            std::string name;
+            std::vector<const Type*> arguments;
+            const Type* returnType = nullptr;
+            void pretty_print(std::ostream& out) const;
+        }; 
+    }
+    
+    // generic code block, defined in implementation file (signatures.cpp)
+    %source {
+        void FunctionSignature::pretty_print(std::ostream& out) const {
+            out << (returnType ? returnType->display_name() : "void") << " "
+                << name << "(";
+            for (const Type* arg : arguments) {
+                out << arg->display_name();
+            }
+        }
+    }
+
+    synthetic std::vector<FunctionSignature> Program::function_signatures() const {
+        std::vector<FunctionSignature> signatures;
+        for (const auto& func : get_FuncDecls()) {
+            signatures.emplace_back(func->signature());
+        }
+        return signatures;
+    }
+
+    synthetic FunctionSignature FuncDecl::signature() const {
+        FunctionSignature sig;
+        sig.name = get_FuncName()->get_ID(); 
+        sig.returnType = has_ReturnType() ? get_ReturnType() : nullptr;
+        for (int i = 0; i < num_Args(); ++i) {
+            sig.push_back(get_Arg(i));
+        }
+        return sig;
+    }
+};
