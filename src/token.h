@@ -28,6 +28,7 @@ namespace zblast {
     X(ASP_INHERITED, "inherited") \
     X(ASP_COLLECTION, "collection") \
     X(ASP_CONTRIBUTE, "contribute") \
+    X(ASP_NOCACHE, "nocache") \
     X(ASP_FINAL, "final") \
     X(ASP_OVERRIDE, "override") \
     X(ASP_CONST, "const") \
@@ -35,6 +36,7 @@ namespace zblast {
     X(ASP_TO, "to") \
     X(ASP_ID, "<identifier>") \
     X(ASP_CPP_BLOCK, "<C++ block>") \
+    X(ASP_CPP_EXPR, "<C++ expression>") \
     X(ASP_CPP_TYPE, "<C++ type>") \
     X(ASP_B_HEADER, "%header") \
     X(ASP_B_SOURCE, "%source") \

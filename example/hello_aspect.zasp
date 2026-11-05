@@ -7,4 +7,9 @@ public:
     construct Program() {
         std::cout << "Hello Program! Program has " << num_FuncDecls() << " function declarations!" << std::endl;
     }
+    destruct Program() {
+        std::cout << "Goodbye Program!" << std::endl;
+    }
+    synthetic cache int Program::cached_attribute() => 1;
+    synthetic nocache int Program::un_cached_attribute() => 2;
 };

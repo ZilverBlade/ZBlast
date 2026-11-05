@@ -1,14 +1,10 @@
-%header {
-#include <string>
-}
-
 aspect Types {
 public:
-    synthetic const char* Type::display_name() const => this->name();
+    synthetic const char* Type::display_name() const => this->name(); 
     synthetic bool Type::is_unknown() const => false;
 
-    synthetic std::string IntType::display_name() const => "Type";
-    synthetic std::string UnknownType::display_name() const => "!UNKNOWN!";
+    synthetic const char* IntType::display_name() const => "Type";
+    synthetic const char* UnknownType::display_name() const => "!UNKNOWN!";
 
-    synthetic std::string UnknownType::is_unknown() const => true;
+    synthetic const char* UnknownType::is_unknown() const => true;
 };

@@ -28,7 +28,6 @@ public:
 };
 
 aspect ErrorProvider {
-    // Contributed after Program is finished constructing.
     contribute FuncDecl to Program::errors(auto& out) {
         if (has_ReturnType() && get_ReturnType()->is_unknown()) {
             out.push_back({

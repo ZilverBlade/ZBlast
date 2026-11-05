@@ -101,14 +101,18 @@ zblast::Error g_ExceptionErrorBuf = {
  asp_access_modifier -> PRIVATE ":"
  asp_access_modifier -> PROTECTED ":"
  
+ asp_qualifier -> NOCACHE
+ asp_qualifier_list -> asp_qualifier asp_qualifier_list
+ asp_qualifier_list -> \epsilon
+
  asp_cpp_impl -> "{" <CPP_BLOCK> "}"
- asp_cpp_impl -> "=>" <CPP_BLOCK> ";"
+ asp_cpp_impl -> "=>" <CPP_EXPR> ";"
  asp_function -> CONSTRUCT <ID> "(" ")" asp_cpp_impl
  asp_function -> DESTRUCT <ID> "(" ")" asp_cpp_impl
- asp_attribute -> SYNTHETIC <CPP_TYPE> <ID> "::" <ID> "(" parameter_list ")" asp_modifiers asp_cpp_impl
- asp_attribute -> INHERITED <CPP_TYPE> <ID> "::" <ID> "(" parameter_list ")" "::" <ID> "(" parameter_list ")" asp_modifiers asp_cpp_impl
- asp_attribute -> COLLECTION <CPP_TYPE> <ID> "::" <ID> ";"
- asp_attribute -> CONTRIBUTE <ID> TO <ID> "::" <ID> "(" parameter_list ")" asp_cpp_impl
+ asp_attribute -> SYNTHETIC asp_qualifier_list <CPP_TYPE> <ID> "::" <ID> "(" parameter_list ")" asp_modifiers asp_cpp_impl
+ asp_attribute -> INHERITED asp_qualifier_list <CPP_TYPE> <ID> "::" <ID> "(" parameter_list ")" "::" <ID> "(" parameter_list ")" asp_modifiers asp_cpp_impl
+ asp_attribute -> COLLECTION asp_qualifier_list <CPP_TYPE> <ID> "::" <ID> ";"
+ asp_attribute -> CONTRIBUTE asp_qualifier_list <ID> TO <ID> "::" <ID> "(" parameter_list ")" asp_cpp_impl
 
  parameter -> <CPP_TYPE> <ID>
  parameter_tail -> "," parameter parameter_tail
