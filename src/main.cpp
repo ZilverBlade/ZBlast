@@ -35,7 +35,7 @@ zblast::Error g_ExceptionErrorBuf = {
     .message = std::string(512, ' ')
 };
 
-/*
+/* .zast:
 
  start -> rule_list EOF
  rule_list -> rule rule_list
@@ -66,6 +66,55 @@ zblast::Error g_ExceptionErrorBuf = {
  variant_qual -> "|" labeled_iden variant_qual
  variant_qual -> \epsilon
 
+*/
+
+
+
+/* .zasp:
+
+ start -> block_list EOF
+ block_list -> block block_list
+ block_list -> \epsilon
+
+ block -> header_block
+ block -> source_block
+ block -> aspect_block
+ 
+ header_block -> B_HEADER <CPP_BLOCK> 
+ source_block -> B_SOURCE <CPP_BLOCK> 
+
+ aspect_block -> ASPECT <ID> "{" asp_statement_list "}" ";"
+ asp_statement_list -> asp_statement asp_statement_list
+ asp_statement_list -> \epsilon
+ 
+ asp_modifiers -> OVERRIDE asp_modifiers
+ asp_modifiers -> FINAL asp_modifiers
+ asp_modifiers -> CONST asp_modifiers
+ asp_modifiers -> NOEXCEPT asp_modifiers
+ asp_modifiers -> \epsilon
+
+ asp_statement -> asp_access_modifier
+ asp_statement -> asp_function
+ asp_statement -> asp_attribute
+
+ asp_access_modifier -> PUBLIC ":"
+ asp_access_modifier -> PRIVATE ":"
+ asp_access_modifier -> PROTECTED ":"
+ 
+ asp_cpp_impl -> "{" <CPP_BLOCK> "}"
+ asp_cpp_impl -> "=>" <CPP_BLOCK> ";"
+ asp_function -> CONSTRUCT <ID> "(" ")" asp_cpp_impl
+ asp_function -> DESTRUCT <ID> "(" ")" asp_cpp_impl
+ asp_attribute -> SYNTHETIC <CPP_TYPE> <ID> "::" <ID> "(" parameter_list ")" asp_modifiers asp_cpp_impl
+ asp_attribute -> INHERITED <CPP_TYPE> <ID> "::" <ID> "(" parameter_list ")" "::" <ID> "(" parameter_list ")" asp_modifiers asp_cpp_impl
+ asp_attribute -> COLLECTION <CPP_TYPE> <ID> "::" <ID> ";"
+ asp_attribute -> CONTRIBUTE <ID> TO <ID> "::" <ID> "(" parameter_list ")" asp_cpp_impl
+
+ parameter -> <CPP_TYPE> <ID>
+ parameter_tail -> "," parameter parameter_tail
+ parameter_tail -> \epsilon
+ parameter_list -> parameter parameter_tail
+ parameter_list -> \epsilon
 */
 
 
@@ -184,6 +233,7 @@ static std::vector<zblast::Token> Tokenize(const char* src) {
 enum EGenerationMode {
     EGeneration_Ast,
     EGeneration_Visitor,
+    EGeneration_Aspect,
 
     EGeneration_UNKNOWN,
 };
@@ -200,6 +250,8 @@ std::vector<EGenerationMode> ParseGenerationModes(const char* modes_) {
             modeList.push_back(EGeneration_Ast);
         } else if (strcmp(t, "visitor") == 0) {
             modeList.push_back(EGeneration_Visitor);
+        } else if (strcmp(t, "aspect") == 0) {
+            modeList.push_back(EGeneration_Aspect);
         } else {
             modeList.push_back(EGeneration_UNKNOWN);
         }
@@ -212,33 +264,35 @@ static void PrintHelp(std::ostream& out) {
     out << R"(
 Usage:
   zblast --help | --version
-  zblast --generate <targets> [-d DIR] <input>
-  zblast --validate <input>
+  zblast --generate <targets> [-d DIR] <inputs>
+  zblast --validate <inputs>
 
 Arguments:
-  <input>                   ZBlast (.zast) file to process
+  <inputs>                  1 ZBlast (.zast) file + N number of ZAspect (.zasp) files to process.
 
 Modes:
-  -g, --generate TARGETS    Generate code; TARGETS is comma-separated: ast, visitor
+  -g, --generate TARGETS    Generate code; TARGETS is comma-separated: ast, visitor, aspect; Note that "aspect" requires "ast" to be specified
   -h, --help                Show this help and exit
-      --validate            Check the file for errors; writes nothing
+      --validate            Check the file(s) for errors; writes nothing
       --version             Show version and exit
 
 Options:
       --error-format FMT    Specifies the error format: gnu, msvc (default: gnu on linux/apple, msvc on windows) 
       --list-outputs        List the files --generate would write, then exit
+  -m, --merge-aspects       Merge multiple aspect implementation details into one .cpp file
   -d, --out-dir DIR         Output directory (default: .)
   -v, --verbose             Increase verbosity
 
 Examples:
   zblast --validate grammar.zast
-  zblast --generate ast,visitor -d gen/zast/ grammar.zast
+  zblast --generate ast,visitor --out-dir gen/zast/ grammar.zast
+  zblast --list-outputs -g ast,aspect -m -d gen/zast/ grammar.zast depth.zasp errors.zasp 
 )";
 }
 
 struct Args {
     bool help = false, version = false, validate = false;
-    bool listOutputs = false, verbose = false;
+    bool listOutputs = false, mergeAspects = false, verbose = false;
     std::optional<std::string> generate;
     std::optional<std::string> errorFormat;
     std::string outDir = ".";
@@ -268,11 +322,12 @@ static Args ParseArgs(int argc, char** argv) {
             for (++i; i < argc; ++i) args.operands.push_back(argv[i]);
             break;
         }
-        else if (IsArg(a, "--help", "-h"))      args.help = true;
-        else if (IsArg(a, "--version"))         args.version = true;
-        else if (IsArg(a, "--validate"))        args.validate = true;
-        else if (IsArg(a, "--list-outputs"))    args.listOutputs = true;
-        else if (IsArg(a, "--verbose", "-v"))   args.verbose = true;
+        else if (IsArg(a, "--help", "-h"))          args.help = true;
+        else if (IsArg(a, "--version"))             args.version = true;
+        else if (IsArg(a, "--validate"))            args.validate = true;
+        else if (IsArg(a, "--list-outputs"))        args.listOutputs = true;
+        else if (IsArg(a, "--merge-aspects", "-m")) args.mergeAspects = true;
+        else if (IsArg(a, "--verbose", "-v"))       args.verbose = true;
         else if (IsArg(a, "--generate", "-g")) { if (TakeValue(argc, argv, i, v, args)) args.generate = v; }
         else if (IsArg(a, "--out-dir", "-d")) { if (TakeValue(argc, argv, i, v, args)) args.outDir = v; }
         else if (IsArg(a, "--error-format")) { if (TakeValue(argc, argv, i, v, args)) args.errorFormat = v; }
@@ -318,11 +373,6 @@ int main(int argc, char** argv) {
             return EXIT_SUCCESS;
         }
 
-        if (args.operands.size() != 1) {
-            std::cerr << "usage error: expected 1 input file, got " << args.operands.size() << std::endl;
-            return 2;
-        }
-
         if (args.errorFormat) {
             if (*args.errorFormat == "gnu") {
                 errorFormat = zblast::EErrorFormat_GNU;
@@ -334,36 +384,58 @@ int main(int argc, char** argv) {
             }
         }
 
-        const std::string& srcFile = args.operands[0];
-        auto srcFilePath = std::filesystem::absolute(srcFile);
-        srcFileAbsolute = srcFilePath.string();
-        std::string srcFileStem = srcFilePath.stem().string();
-        std::string srcFileExtension = srcFilePath.extension().string();
+        if (args.operands.size() < 1) {
+            std::cerr << "usage error: expected at least 1 input file, got 0" << std::endl;
+            return 2;
+        }
+        
         std::filesystem::path absoluteDirOutput = std::filesystem::absolute(args.outDir);
-
-        if (args.generate) {
-            if (srcFileExtension != ".zast") {
-                std::cerr << "usage error: unsupported file extension '" << srcFileExtension << "', expected '.zast'" << std::endl;
-                return 2;
+        std::filesystem::path srcFilePath;
+        std::string srcFileStem;
+        std::vector<std::filesystem::path> aspectFiles;
+        
+        for (auto& file : args.operands) {
+            auto path = std::filesystem::absolute(file);
+            std::string srcFileExtension = inputFiles.back().extension().string();
+            if (srcFileExtension == ".zast") {
+                if (!srcFileStem.empty()) {
+                    std::cerr << "usage error: provided more than 1 .zast file, expected a singular .zast file" << std::endl;
+                    return 2;
+                }
+                srcFileStem = path.stem().string();
+                srcFilePath = std::move(path);
+            } else if (srcFileExtension == ".zasp") {
+                aspectFiles.emplace_back(std::move(path));
+            } else {
+                if (args.generate) {
+                    std::cerr << "usage error: unsupported file extension '" << srcFileExtension << "', expected one of '.zast | .zasp'" << std::endl;
+                    return 2;
+                }
             }
         }
 
         std::vector<std::unique_ptr<zblast::Generator>> generators;
         bool generateAst = false;
         bool generateVisitor = false;
+        bool generateAspect = false;
         bool unknownGenArg = false;
         if (args.generate) {
             for (EGenerationMode mode : ParseGenerationModes(args.generate.value().c_str())) {
                 generateAst |= mode == EGeneration_Ast;
                 generateVisitor |= mode == EGeneration_Visitor;
+                generateAspect |= mode == EGeneration_Aspect;
                 unknownGenArg |= mode == EGeneration_UNKNOWN;
             }
             if (unknownGenArg) {
                 std::cerr << "usage error: unknown --generate argument (provided " << args.generate.value() << ")" << std::endl;
                 return 2;
             }
-            if (!generateAst && !generateVisitor) {
+            if (!generateAst && !generateVisitor && !generateAspect) {
                 std::cerr << "usage error: no --generate arguments provided" << std::endl;
+                return 2;
+            }
+            if (generateAspect && !generateAst) {
+                std::cerr << "usage error: generating 'aspect' without 'ast', AST generation is required" << std::endl;
                 return 2;
             }
 

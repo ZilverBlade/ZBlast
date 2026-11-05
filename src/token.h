@@ -17,6 +17,38 @@ namespace zblast {
     X(L_ANGLE, "<") X(R_ANGLE, ">") \
     X(EOF, "<end of file>") \
     X(ERR, "<error>")
+\
+    X(ASP_ASPECT, "aspect") \
+    X(ASP_PUBLIC, "public") \
+    X(ASP_PROTECTED, "protected") \
+    X(ASP_PRIVATE, "private") \
+    X(ASP_CONSRUCT, "construct") \
+    X(ASP_DESTRUCT, "destruct") \
+    X(ASP_SYNTHETIC, "synthetic") \
+    X(ASP_INHERITED, "inherited") \
+    X(ASP_COLLECTION, "collection") \
+    X(ASP_CONTRIBUTE, "contribute") \
+    X(ASP_FINAL, "final") \
+    X(ASP_OVERRIDE, "override") \
+    X(ASP_CONST, "const") \
+    X(ASP_NOEXCEPT, "noexcept") \
+    X(ASP_TO, "to") \
+    X(ASP_ID, "<identifier>") \
+    X(ASP_CPP_BLOCK, "<C++ block>") \
+    X(ASP_CPP_TYPE, "<C++ type>") \
+    X(ASP_B_HEADER, "%header") \
+    X(ASP_B_SOURCE, "%source") \
+    X(ASP_COLON, ":") \
+    X(ASP_SEMICOLON, ";") \
+    X(ASP_COMMA, ",") \
+    X(ASP_DOUBLE_COLON, "::") \
+    X(ASP_ARROW, "=>") \
+    X(ASP_L_BRACE, "{") \
+    X(ASP_R_BRACE, "}") \
+    X(ASP_L_PAREN, "(") \
+    X(ASP_R_PAREN, ")") \
+    X(ASP_EOF, "<end of file>") \
+    X(ASP_ERR, "<error>") 
 
 #define EXPAND_TOKEN_ENUM(x, ...) EToken_##x,
     enum ETokenType {
