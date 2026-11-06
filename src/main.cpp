@@ -109,16 +109,10 @@ zblast::Error g_ExceptionErrorBuf = {
  asp_cpp_impl -> "=>" <CPP_EXPR> ";"
  asp_function -> CONSTRUCT <ID> "(" ")" asp_cpp_impl
  asp_function -> DESTRUCT <ID> "(" ")" asp_cpp_impl
- asp_attribute -> SYNTHETIC asp_qualifier_list <CPP_TYPE> <ID> "::" <ID> "(" parameter_list ")" asp_modifiers asp_cpp_impl
- asp_attribute -> INHERITED asp_qualifier_list <CPP_TYPE> <ID> "::" <ID> "(" parameter_list ")" "::" <ID> "(" parameter_list ")" asp_modifiers asp_cpp_impl
+ asp_attribute -> SYNTHETIC asp_qualifier_list <CPP_TYPE> <ID> "::" <ID> "(" <CPP_PARAM_LIST> ")" asp_modifiers asp_cpp_impl
+ asp_attribute -> INHERITED asp_qualifier_list <CPP_TYPE> <ID> "::" <ID> "(" <CPP_PARAM_LIST> ")" "::" <ID> "(" <CPP_PARAM_LIST> ")" asp_modifiers asp_cpp_impl
  asp_attribute -> COLLECTION asp_qualifier_list <CPP_TYPE> <ID> "::" <ID> ";"
- asp_attribute -> CONTRIBUTE asp_qualifier_list <ID> TO <ID> "::" <ID> "(" parameter_list ")" asp_cpp_impl
-
- parameter -> <CPP_TYPE> <ID>
- parameter_tail -> "," parameter parameter_tail
- parameter_tail -> \epsilon
- parameter_list -> parameter parameter_tail
- parameter_list -> \epsilon
+ asp_attribute -> CONTRIBUTE asp_qualifier_list <ID> TO <ID> "::" <ID> "(" <CPP_PARAM_LIST> ")" asp_cpp_impl
 */
 
 

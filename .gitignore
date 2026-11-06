@@ -422,6 +422,7 @@ CTestTestfile.cmake
 Testing/Temporary/
 ./build/
 .idea/
+.vscode/
 
 # Add exception for packaging
 
